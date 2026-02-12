@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import p5 from 'p5';
 import {
     COLORS, displacement, velocity, angularFrequency,
-    kineticEnergy, potentialEnergy,
+    kineticEnergy, potentialEnergy, drawEnergyBars,
     drawSpring, drawDashedLine, drawGrid
 } from '../utils/physics';
 
@@ -221,47 +221,8 @@ export default function Mode3Canvas({
             plotTrail(state.trail2, graphCy2, A2, COLORS.accentRGB);
 
             // ========== エネルギー棒グラフ ==========
-            const drawEnergyBars = (cx, cy, KE, PE, totalE, colorRGB, label) => {
-                const barWidth = 20;
-                const maxH = 60;
-                const barTop = cy - maxH;
-                const scale = totalE > 0 ? maxH / totalE : 0;
-
-                // エネルギーラベル
-                p.fill(255, 255, 255, 120);
-                p.noStroke();
-                p.textSize(9);
-                p.textAlign(p.CENTER, p.BOTTOM);
-                p.text('Energy', cx + barWidth, barTop - 5);
-
-                // 合計エネルギー枠
-                p.noFill();
-                p.stroke(255, 255, 255, 40);
-                p.strokeWeight(1);
-                p.rect(cx - barWidth / 2 - 2, barTop, barWidth * 2 + 4, maxH, 3);
-
-                // 運動エネルギー（紫）
-                const keH = KE * scale;
-                p.fill(...COLORS.purpleRGB, 180);
-                p.noStroke();
-                p.rect(cx - barWidth / 2, cy - keH, barWidth, keH, 2, 2, 0, 0);
-
-                // 弾性位置エネルギー（緑）
-                const peH = PE * scale;
-                p.fill(...COLORS.greenRGB, 180);
-                p.rect(cx + barWidth / 2, cy - peH, barWidth, peH, 2, 2, 0, 0);
-
-                // ラベル
-                p.textSize(7);
-                p.fill(...COLORS.purpleRGB, 200);
-                p.textAlign(p.CENTER, p.TOP);
-                p.text('KE', cx, cy + 3);
-                p.fill(...COLORS.greenRGB, 200);
-                p.text('PE', cx + barWidth, cy + 3);
-            };
-
-            drawEnergyBars(200, row1Cy + A1 + 15, KE1, PE1, E1, COLORS.primaryRGB, '1');
-            drawEnergyBars(200, row2Cy + A2 + 15, KE2, PE2, E2, COLORS.accentRGB, '2');
+            drawEnergyBars(p, 200, row1Cy + A1 + 15, KE1, PE1, E1, COLORS.primaryRGB, true);
+            drawEnergyBars(p, 200, row2Cy + A2 + 15, KE2, PE2, E2, COLORS.accentRGB, true);
 
             // 水平補助線（2つのバネ系を結ぶ）
             if (phaseDiffEnabled) {

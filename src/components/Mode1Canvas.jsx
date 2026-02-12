@@ -1,15 +1,17 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 import p5 from 'p5';
 import {
-    COLORS, circularPosition, displacement,
+    COLORS, circularPosition, displacement, velocity,
+    kineticEnergy, potentialEnergy, drawEnergyBars,
     drawSpring, drawDashedLine, drawGrid, drawArrow
 } from '../utils/physics';
 
 /**
  * Mode 1: 円運動から単振動への展開
- * 等速円運動 → y軸投影 → バネ接続 → y-tグラフ生成
+ * 等速円運動 → y軸投影 → バネ接続 → y-tグラフ生成 → エネルギー保存
  */
-export default function Mode1Canvas({ step, isPlaying, speedMultiplier, onTimeUpdate }) {
+export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTotalEnergy, onTimeUpdate }) {
     const containerRef = useRef(null);
     const p5Ref = useRef(null);
     const stateRef = useRef({
@@ -143,7 +145,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, onTimeUp
                     p.fill(...COLORS.primaryRGB, 200);
                     p.textSize(11);
                     p.textAlign(p.LEFT, p.CENTER);
-                    p.text(`y = ${yDisp.toFixed(1)}`, projX + 12, circCy - pos.y);
+                    p.text(`y = ${yDisp.toFixed(1)} `, projX + 12, circCy - pos.y);
                 }
             }
 
@@ -230,6 +232,10 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, onTimeUp
                 // グラフ背景
                 p.fill(0, 0, 0, 40 * state.fadeAxis);
                 p.noStroke();
+                // Step 5の時はグラフを少し小さくしてスペースを空ける？ 
+                // あるいはエネルギーバーをグラフの上に重ねるか、横に置く
+                // レイアウト: グラフを少し左に詰めるわけにはいかないので、右端の空きスペースを利用
+
                 p.rect(graphLeft - 10, 30, graphWidth + 40, H - 60, 8);
 
                 // グラフ軸
@@ -308,6 +314,30 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, onTimeUp
                 p.text('y - t 図', (graphLeft + graphRight) / 2, 38);
             }
 
+            // ========== Step 5: エネルギー保存 ==========
+            if (currentStep >= 5) {
+                // エネルギー計算
+                // 質量 m=1, バネ定数 k=omega^2 (m=1なので) と仮定して比率で表示
+                const m = 1.0;
+                const k = omega * omega * m;
+                // 速度計算
+                const v = velocity(A, omega, state.t, phi);
+
+                // エネルギー正規化（表示用）
+                // そのままだと値が大きいのでスケールは drawEnergyBars 内で調整されるが
+                // 厳密な値を入れる
+                const KE = kineticEnergy(m, v);
+                const PE = potentialEnergy(k, yDisp);
+                const totalE = KE + PE;
+
+                // エネルギーバーの描画位置：ProjX（バネ）とGraphの間、あるいはGraphの右端
+                // スペース的にProjXの右側、グラフの手前が良いか
+                const energyX = 380;
+                const energyY = circCy + A + 80;
+
+                drawEnergyBars(p, energyX, energyY, KE, PE, totalE, COLORS.primaryRGB, showTotalEnergy);
+            }
+
             // 時間表示
             p.fill(255, 255, 255, 120);
             p.noStroke();
@@ -328,7 +358,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, onTimeUp
                 onTimeUpdate(state.t, yDisp);
             }
         };
-    }, [step, isPlaying, speedMultiplier, onTimeUpdate]);
+    }, [step, isPlaying, speedMultiplier, showTotalEnergy, onTimeUpdate]);
 
     useEffect(() => {
         if (containerRef.current && !p5Ref.current) {

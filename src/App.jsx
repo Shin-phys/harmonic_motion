@@ -14,12 +14,13 @@ import Mode3Panel from './components/Mode3Panel';
 export default function App() {
   // ========== グローバル状態 ==========
   const [mode, setMode] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false); // 初期状態は停止
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [resetKey, setResetKey] = useState(0);
 
   // ========== Mode 1 状態 ==========
   const [step, setStep] = useState(1);
+  const [showTotalEnergy, setShowTotalEnergy] = useState(false); // Step 5用
 
   // ========== Mode 2 状態 ==========
   const [phi, setPhi] = useState(Math.PI / 2); // 初期位相
@@ -36,7 +37,7 @@ export default function App() {
   // ========== ハンドラ ==========
   const handleReset = useCallback(() => {
     setResetKey((k) => k + 1);
-    setIsPlaying(true);
+    setIsPlaying(false); // リセット時は停止
   }, []);
 
   const handlePlayPause = useCallback(() => {
@@ -46,8 +47,15 @@ export default function App() {
   const handleModeChange = useCallback((newMode) => {
     setMode(newMode);
     setResetKey((k) => k + 1);
-    setIsPlaying(true);
+    setIsPlaying(false); // モード変更時も停止
   }, []);
+
+  // パラメータ変更時の共通処理（変更、リセット、停止）
+  const updateParams = (updater) => {
+    updater();
+    setResetKey((k) => k + 1);
+    setIsPlaying(false);
+  };
 
   // モードタブ定義
   const modes = [
@@ -109,6 +117,7 @@ export default function App() {
                 step={step}
                 isPlaying={isPlaying}
                 speedMultiplier={speedMultiplier}
+                showTotalEnergy={showTotalEnergy} // 追加
                 onTimeUpdate={() => { }}
               />
             )}
@@ -146,12 +155,14 @@ export default function App() {
                 <Mode1Panel
                   step={step}
                   onStepChange={setStep}
+                  showTotalEnergy={showTotalEnergy}
+                  onShowTotalEnergyChange={setShowTotalEnergy}
                 />
               )}
               {mode === 2 && (
                 <Mode2Panel
                   phi={phi}
-                  onPhiChange={setPhi}
+                  onPhiChange={(val) => updateParams(() => setPhi(val))}
                   showVectors={showVectors}
                   onShowVectorsChange={setShowVectors}
                   graphType={graphType}
@@ -162,14 +173,14 @@ export default function App() {
                 <Mode3Panel
                   spring1={spring1}
                   spring2={spring2}
-                  onSpring1Change={setSpring1}
-                  onSpring2Change={setSpring2}
+                  onSpring1Change={(val) => updateParams(() => setSpring1(val))}
+                  onSpring2Change={(val) => updateParams(() => setSpring2(val))}
                   locked={locked}
                   onLockedChange={setLocked}
                   phaseDiffEnabled={phaseDiffEnabled}
-                  onPhaseDiffEnabledChange={setPhaseDiffEnabled}
+                  onPhaseDiffEnabledChange={(val) => updateParams(() => setPhaseDiffEnabled(val))}
                   phaseDiff={phaseDiff}
-                  onPhaseDiffChange={setPhaseDiff}
+                  onPhaseDiffChange={(val) => updateParams(() => setPhaseDiff(val))}
                 />
               )}
             </div>

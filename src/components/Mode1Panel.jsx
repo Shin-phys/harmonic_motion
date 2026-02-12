@@ -2,7 +2,7 @@
  * Mode 1: 操作パネル
  * ステップ進行と概要解説
  */
-export default function Mode1Panel({ step, onStepChange }) {
+export default function Mode1Panel({ step, onStepChange, showTotalEnergy, onShowTotalEnergyChange }) {
     const steps = [
         {
             title: 'Step 1: 等速円運動',
@@ -23,6 +23,11 @@ export default function Mode1Panel({ step, onStepChange }) {
             title: 'Step 4: y-t グラフ',
             desc: '時間経過に伴う変位をグラフにプロットします。正弦波が現れます。',
             detail: 'y = A sin(ωt + φ) という式が、この波形を完全に記述します。',
+        },
+        {
+            title: 'Step 5: エネルギー保存',
+            desc: '運動エネルギーと弾性エネルギーの変化を観察します。',
+            detail: '摩擦がない場合、二つのエネルギーの和（力学的エネルギー）は常に一定です。',
         },
     ];
 
@@ -67,13 +72,28 @@ export default function Mode1Panel({ step, onStepChange }) {
                 </button>
                 <button
                     className="btn btn-primary flex-1"
-                    onClick={() => onStepChange(Math.min(4, step + 1))}
-                    disabled={step >= 4}
-                    style={{ opacity: step >= 4 ? 0.4 : 1 }}
+                    onClick={() => onStepChange(Math.min(5, step + 1))}
+                    disabled={step >= 5}
+                    style={{ opacity: step >= 5 ? 0.4 : 1 }}
                 >
                     進む →
                 </button>
             </div>
+
+            {/* Step 5: エネルギー表示ボタン */}
+            {step === 5 && (
+                <div className="mt-4 fade-in">
+                    <button
+                        className={`btn w-full ${showTotalEnergy ? 'btn-success' : 'btn-secondary'} border border-slate-600`}
+                        onClick={() => onShowTotalEnergyChange(!showTotalEnergy)}
+                    >
+                        {showTotalEnergy ? '力学的エネルギーを表示中 (ON)' : '力学的エネルギーを表示 (OFF)'}
+                    </button>
+                    <p className="text-xs text-slate-400 mt-2 text-center">
+                        ボタンを押すと、力学的エネルギー（合計）のバーが表示されます。
+                    </p>
+                </div>
+            )}
 
             {/* 数式情報 */}
             {step >= 2 && (

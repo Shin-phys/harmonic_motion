@@ -303,3 +303,61 @@ export function drawGrid(p, width, height, spacing = 40) {
         p.line(0, y, width, y);
     }
 }
+
+/**
+ * エネルギー棒グラフの描画
+ */
+export function drawEnergyBars(p, cx, cy, KE, PE, totalE, colorRGB, showTotal = true) {
+    const barWidth = 20;
+    const maxH = 60;
+    const barTop = cy - maxH;
+    // スケールは固定（例えば全エネルギー100J相当を基準）にするか、totalEに合わせるか。
+    // ここでは視覚的なわかりやすさのため、totalEがmaxHになるようにスケール
+    const scale = totalE > 0.001 ? maxH / totalE : 0;
+
+    // ラベル
+    p.fill(255, 255, 255, 120);
+    p.noStroke();
+    p.textSize(10);
+    p.textAlign(p.CENTER, p.BOTTOM);
+    p.text('Energy', cx, barTop - 5);
+
+    // 力学的エネルギー（合計）枠
+    if (showTotal) {
+        p.noFill();
+        p.stroke(255, 255, 255, 40);
+        p.strokeWeight(1);
+        // 合計の枠を描く
+        const totalW = barWidth * 2 + 10;
+        p.rect(cx - totalW / 2, barTop, totalW, maxH, 3);
+
+        // 力学的エネルギー（トータル）のラベル
+        p.fill(255, 255, 255, 80);
+        p.noStroke();
+        p.textSize(9);
+        p.textAlign(p.CENTER, p.TOP);
+        p.text('Total', cx, cy + 3);
+    }
+
+    // 運動エネルギー（KE）
+    const keH = KE * scale;
+    p.fill(139, 92, 246, 200); // Purple
+    p.noStroke();
+    p.rect(cx - barWidth - 2, cy - keH, barWidth, keH, 2, 2, 0, 0);
+
+    // 弾性エネルギー（PE）
+    const peH = PE * scale;
+    p.fill(16, 185, 129, 200); // Green
+    p.noStroke();
+    p.rect(cx + 2, cy - peH, barWidth, peH, 2, 2, 0, 0);
+
+    // ラベル
+    p.textSize(8);
+    p.fill(139, 92, 246, 200);
+    p.textAlign(p.CENTER, p.TOP);
+    p.text('K', cx - barWidth - 2 + barWidth / 2, cy + 3); // Kinetic
+
+    p.fill(16, 185, 129, 200);
+    p.textAlign(p.CENTER, p.TOP);
+    p.text('U', cx + 2 + barWidth / 2, cy + 3); // Potential
+}
