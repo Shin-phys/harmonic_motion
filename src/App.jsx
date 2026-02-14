@@ -20,7 +20,8 @@ export default function App() {
 
   // ========== Mode 1 状態 ==========
   const [step, setStep] = useState(1);
-  const [showTotalEnergy, setShowTotalEnergy] = useState(false); // Step 5用
+  const [showTotalEnergy, setShowTotalEnergy] = useState(false); // Step 7用
+  const [showVectorsMode1, setShowVectorsMode1] = useState(false); // Step 2,3,4用
 
   // ========== Mode 2 状態 ==========
   const [phi, setPhi] = useState(Math.PI / 2); // 初期位相
@@ -117,7 +118,8 @@ export default function App() {
                 step={step}
                 isPlaying={isPlaying}
                 speedMultiplier={speedMultiplier}
-                showTotalEnergy={showTotalEnergy} // 追加
+                showTotalEnergy={showTotalEnergy}
+                showVectors={showVectorsMode1} // 追加
                 onTimeUpdate={() => { }}
               />
             )}
@@ -157,6 +159,8 @@ export default function App() {
                   onStepChange={setStep}
                   showTotalEnergy={showTotalEnergy}
                   onShowTotalEnergyChange={setShowTotalEnergy}
+                  showVectors={showVectorsMode1}
+                  onShowVectorsChange={setShowVectorsMode1}
                 />
               )}
               {mode === 2 && (
