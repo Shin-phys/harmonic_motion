@@ -115,111 +115,108 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 p.strokeWeight(1.5);
                 p.arc(circCx, circCy, 30, 30, -pos.angle, 0);
 
-                // ========== ベクトル描画 (Step 1.5, 5, 6, および Step 2-4のトグルON時) ==========
-                // Step 1.5, 5, 6 は強制表示。Step 2,3,4 は showVectors フラグ依存。
-                const showVec = (currentStep === 1.5) || (currentStep === 5) || (currentStep === 6) ||
+                // ========== ベクトル描画 ==========
+                // Step 2-4: showVectors依存
+                // Step 1.5, 5, 6: 強制表示 (円運動ベクトル)
+                // Step 7: 円運動ベクトルは非表示、投影ベクトルのみ表示
+
+                const showCircleVec = (currentStep === 1.5) || (currentStep === 5) || (currentStep === 6) ||
                     ((currentStep >= 2 && currentStep <= 4) && showVectors);
 
-                if (showVec) {
+                // Step 6, 7では投影ベクトルを表示
+                const showProjVec = (currentStep === 6 || currentStep === 7);
+
+                if (showCircleVec || showProjVec) {
                     // 速度・加速度の計算
-                    const v = velocity(A, omega, state.t, phi); // スカラー（y成分の大きさ的な?）ではなくベクトル計算が必要
-                    const a = acceleration(A, omega, state.t, phi); // これは単振動のa
+                    const v = velocity(A, omega, state.t, phi);
+                    const a = acceleration(A, omega, state.t, phi);
 
-                    // 円運動上のベクトル
-                    // 速度ベクトル v (接線方向)
-                    // v_x = -Aω sin(θ), v_y = Aω cos(θ)
-                    // p5の座標系はy軸下向きなので、画面上のy成分は -v_y になるが、
-                    // ここでの pos.angle = ωt + φ。
-                    // 速度ベクトルの角度は angle + π/2
-
-                    const vScale = 0.5; // 表示スケール
-                    const aScale = 0.25;
+                    // スケール調整 (以前の0.7倍)
+                    // 元: vScale = 0.5, aScale = 0.25
+                    const vScale = 0.35;
+                    const aScale = 0.175;
 
                     const theta = pos.angle;
+
+                    // 円運動上のベクトル成分
                     const vx = -A * omega * Math.sin(theta);
-                    const vy = A * omega * Math.cos(theta); // 物理座標系のvy
-
-                    // 画面上のベクトル終点 (yは反転)
-                    const vEndX = circCx + pos.x + vx * vScale;
-                    const vEndY = circCy - pos.y - vy * vScale;
-
-                    // 速度ベクトル描画
-                    p.stroke(...COLORS.purpleRGB, 200);
-                    p.strokeWeight(2);
-                    drawArrow(p, circCx + pos.x, circCy - pos.y, vEndX, vEndY, 6);
-
-                    // 加速度ベクトル a (中心方向)
-                    // a_x = -Aω^2 cos(θ), a_y = -Aω^2 sin(θ)
+                    const vy = A * omega * Math.cos(theta);
                     const ax = -A * omega * omega * Math.cos(theta);
                     const ay = -A * omega * omega * Math.sin(theta);
 
+                    // 円運動上のベクトル終点
+                    const vEndX = circCx + pos.x + vx * vScale;
+                    const vEndY = circCy - pos.y - vy * vScale;
                     const aEndX = circCx + pos.x + ax * aScale;
-                    const aEndY = circCy - pos.y - ay * aScale; // y反転
+                    const aEndY = circCy - pos.y - ay * aScale;
 
-                    // 加速度ベクトル描画
-                    p.stroke(...COLORS.orangeRGB, 200);
-                    p.strokeWeight(2);
-                    drawArrow(p, circCx + pos.x, circCy - pos.y, aEndX, aEndY, 6);
+                    // 1. 円運動上のベクトル描画 (Step 7では描画しない)
+                    if (showCircleVec) {
+                        // 速度ベクトル
+                        p.stroke(...COLORS.purpleRGB, 200);
+                        p.strokeWeight(2);
+                        drawArrow(p, circCx + pos.x, circCy - pos.y, vEndX, vEndY, 6);
 
-                    // ========== Step 6 & 7: ベクトルの投影とグラフ ========== 
-                    // Step 7でもStep 6の表示を維持する
-                    if (currentStep >= 6) {
-                        if (currentStep === 6 || currentStep === 7) {
-                            // 1. 速度ベクトルのy成分（y軸の隣に表示）
-                            // y軸(projX)の少し右に配置
-                            const vProjX = projX + 25;
-                            const vProjStartY = circCy - pos.y;
-                            const vProjEndY = vProjStartY - vy * vScale; // y反転
+                        // 加速度ベクトル
+                        p.stroke(...COLORS.orangeRGB, 200);
+                        p.strokeWeight(2);
+                        drawArrow(p, circCx + pos.x, circCy - pos.y, aEndX, aEndY, 6);
+                    }
 
-                            // 補助線（等速円運動の速度ベクトルの先 → 投影ベクトルの先）
+                    // 2. 投影ベクトル描画 (Step 6, 7)
+                    if (showProjVec) {
+                        // --- 速度ベクトルのy成分 ---
+                        const vProjX = projX + 25;
+                        const vProjStartY = circCy - pos.y;
+                        const vProjEndY = vProjStartY - vy * vScale; // y反転
+
+                        // 補助線（等速円運動の速度ベクトルの先 → 投影ベクトルの先）
+                        // Step 7では円運動ベクトルがないので補助線も不要かもしれないが、
+                        // 「投影」の概念を残すなら円運動の位置から線を引くべきか？
+                        // 要件: "Step6のベクトルのy軸投影（円運動のベクトルは不要）"
+                        // 円運動ベクトル自体が消えるなら、そこからの補助線（点線）も消すのが自然。
+                        if (showCircleVec) {
                             p.stroke(...COLORS.purpleRGB, 80);
                             p.strokeWeight(1);
                             drawDashedLine(p, vEndX, vEndY, vProjX, vProjEndY, 3, 3);
+                        }
 
-                            // 投影ベクトル
-                            p.stroke(...COLORS.purpleRGB);
-                            p.strokeWeight(2);
-                            drawArrow(p, vProjX, vProjStartY, vProjX, vProjEndY, 6);
+                        // 投影ベクトル
+                        p.stroke(...COLORS.purpleRGB);
+                        p.strokeWeight(2);
+                        drawArrow(p, vProjX, vProjStartY, vProjX, vProjEndY, 6);
 
-                            // ラベル
-                            p.fill(...COLORS.purpleRGB);
-                            p.noStroke();
-                            p.textSize(10);
-                            p.textAlign(p.LEFT, p.CENTER);
-                            p.text('vy', vProjX + 5, (vProjStartY + vProjEndY) / 2);
+                        // ラベル
+                        p.fill(...COLORS.purpleRGB);
+                        p.noStroke();
+                        p.textSize(10);
+                        p.textAlign(p.LEFT, p.CENTER);
+                        p.text('vy', vProjX + 5, (vProjStartY + vProjEndY) / 2);
 
 
-                            // 2. 加速度ベクトルのy成分
-                            // 重心（円運動の点）を始点として表示するか、y軸上に投影するか
-                            // 要件: "加速度ベクトルの始点は質量mの物体の重心に"
-                            // これは円運動上の加速度ベクトル（オレンジ）を指していると思われる（既に描画）。
-                            // "補助線を薄い波線で描き、y成分を描写していることを理解しやすく"
-                            // よって、y軸上にも加速度成分を描画し、リンクさせる
+                        // --- 加速度ベクトルのy成分 ---
+                        const aProjX = projX; // y軸の中心 (重心)
+                        const aProjStartY = circCy - pos.y;
+                        const aProjEndY = aProjStartY - ay * aScale;
 
-                            const aProjX = projX; // y軸の中心 (重心)
-                            const aProjStartY = circCy - pos.y;
-                            const aProjEndY = aProjStartY - ay * aScale;
-
-                            // 補助線（加速度ベクトルの先 → 投影ベクトルの先）
+                        // 補助線
+                        if (showCircleVec) {
                             p.stroke(...COLORS.orangeRGB, 80);
                             p.strokeWeight(1);
-                            // aEndX, aEndY は円軌道上の加速度ベクトルの終点
-                            // 投影された加速度ベクトルの終点は (aProjX, aProjEndY)
-                            // ここでは「ベクトルの先同士」を結ぶのが自然
                             drawDashedLine(p, aEndX, aEndY, aProjX, aProjEndY, 3, 3);
-
-                            // 投影ベクトル (y軸上の加速度)
-                            p.stroke(...COLORS.orangeRGB);
-                            p.strokeWeight(2);
-                            drawArrow(p, aProjX, aProjStartY, aProjX, aProjEndY, 6);
-
-                            // ラベル
-                            p.fill(...COLORS.orangeRGB);
-                            p.noStroke();
-                            p.textSize(10);
-                            p.textAlign(p.RIGHT, p.CENTER);
-                            p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
                         }
+
+                        // 投影ベクトル (y軸上の加速度)
+                        p.stroke(...COLORS.orangeRGB);
+                        p.strokeWeight(2);
+                        drawArrow(p, aProjX, aProjStartY, aProjX, aProjEndY, 6);
+
+                        // ラベル
+                        p.fill(...COLORS.orangeRGB);
+                        p.noStroke();
+                        p.textSize(10);
+                        p.textAlign(p.RIGHT, p.CENTER);
+                        p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
                     }
                 }
             }
