@@ -343,9 +343,6 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 // グラフ背景
                 p.fill(0, 0, 0, 40 * state.fadeAxis);
                 p.noStroke();
-                // Step 5の時はグラフを少し小さくしてスペースを空ける？ 
-                // あるいはエネルギーバーをグラフの上に重ねるか、横に置く
-                // レイアウト: グラフを少し左に詰めるわけにはいかないので、右端の空きスペースを利用
 
                 p.rect(graphLeft - 10, 30, graphWidth + 40, H - 60, 8);
 
@@ -409,7 +406,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         p.ellipse(currentPx, graphCy - yDisp, 16, 16);
                     }
 
-                    // ========== Step 6 & 7: v-t, a-t グラフ ==========
+                    // ========== Step 6 & 7: v-t, a-t グラフ ========== 
                     if (currentStep === 6 || currentStep === 7) {
                         // v-t グラフ (紫色)
                         if (showVtGraph) {
