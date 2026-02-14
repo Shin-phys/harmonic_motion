@@ -409,15 +409,11 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         p.ellipse(currentPx, graphCy - yDisp, 16, 16);
                     }
 
-                    // ========== Step 6: v-t, a-t グラフ ==========
+                    // ========== Step 6 & 7: v-t, a-t グラフ ==========
                     if (currentStep === 6 || currentStep === 7) {
                         // v-t グラフ (紫色)
                         if (showVtGraph) {
-                            // スケール調整: vMax = A*omega. これをグラフ内に収めるためにスケールダウン
-                            // A=80付近になるように調整
                             const vScaleFactor = 0.5;
-                            // v = A*omega ~ 80*2 = 160. 160*0.5 = 80.
-
                             p.stroke(...COLORS.purpleRGB, alpha * 0.8);
                             p.strokeWeight(1.5);
                             p.noFill();
@@ -439,10 +435,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
 
                         // a-t グラフ (オレンジ色)
                         if (showAtGraph) {
-                            // スケール調整: aMax = A*omega^2 ~ 80*4 = 320. 
                             const aScaleFactor = 0.25;
-                            // 320*0.25 = 80.
-
                             p.stroke(...COLORS.orangeRGB, alpha * 0.8);
                             p.strokeWeight(1.5);
                             p.noFill();
@@ -469,7 +462,8 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         p.strokeWeight(1);
                         drawDashedLine(p, projX + 15, circCy - pos.y, currentPx - 5, graphCy - yDisp, 5, 4);
                     }
-                }
+                } // End if(state.trail.length > 1)
+
                 // グラフタイトル
                 p.fill(255, 255, 255, alpha * 0.8);
                 p.noStroke();
@@ -481,21 +475,14 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
             // ========== Step 7: エネルギー保存 ==========
             if (currentStep >= 7) {
                 // エネルギー計算
-                // 質量 m=1, バネ定数 k=omega^2 (m=1なので) と仮定して比率で表示
                 const m = 1.0;
                 const k = omega * omega * m;
-                // 速度計算
                 const v = velocity(A, omega, state.t, phi);
 
-                // エネルギー正規化（表示用）
-                // そのままだと値が大きいのでスケールは drawEnergyBars 内で調整されるが
-                // 厳密な値を入れる
                 const KE = kineticEnergy(m, v);
                 const PE = potentialEnergy(k, yDisp);
                 const totalE = KE + PE;
 
-                // エネルギーバーの描画位置：ProjX（バネ）とGraphの間、あるいはGraphの右端
-                // スペース的にProjXの右側、グラフの手前が良いか
                 const energyX = 380;
                 const energyY = circCy + A + 80;
 
