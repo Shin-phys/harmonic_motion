@@ -116,8 +116,8 @@ export default function Mode1Panel({
                 </div>
             )}
 
-            {/* Step 6: グラフ表示切り替えボタン */}
-            {step === 6 && (
+            {/* Step 6 & 7: グラフ表示切り替えボタン */}
+            {(step === 6 || step === 7) && (
                 <div className="mt-4 fade-in space-y-2">
                     <button
                         className={`btn w-full ${showVtGraph ? 'bg-purple-600 text-white' : 'btn-secondary'} border border-slate-600 text-xs`}

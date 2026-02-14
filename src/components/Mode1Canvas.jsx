@@ -508,27 +508,19 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
         };
     }, [step, isPlaying, speedMultiplier, showVectors, showVtGraph, showAtGraph, onTimeUpdate]);
 
+    // p5インスタンスの管理（生成と破棄）
     useEffect(() => {
-        if (containerRef.current && !p5Ref.current) {
-            p5Ref.current = new p5(sketch, containerRef.current);
-        }
+        if (!containerRef.current) return;
 
+        // インスタンス生成
+        const p5Instance = new p5(sketch, containerRef.current);
+        p5Ref.current = p5Instance;
+
+        // クリーンアップ
         return () => {
-            if (p5Ref.current) {
-                p5Ref.current.remove();
-                p5Ref.current = null;
-            }
+            p5Instance.remove();
+            p5Ref.current = null;
         };
-    }, []);
-
-    // step / isPlaying / speed が変わったときにp5インスタンスを再生成
-    useEffect(() => {
-        if (p5Ref.current) {
-            p5Ref.current.remove();
-        }
-        if (containerRef.current) {
-            p5Ref.current = new p5(sketch, containerRef.current);
-        }
     }, [sketch]);
 
     // リセット用
