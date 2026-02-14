@@ -16,7 +16,6 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
     const p5Ref = useRef(null);
     const stateRef = useRef({
         t: 0,
-        t: 0,
         trail: [],      // y-tグラフ用の軌跡データ {t, y, v, a}
         graphOffset: 0,  // グラフスクロール用オフセット
         fadeAxis: 0,     // 軸のフェードインアニメーション
@@ -521,7 +520,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 onTimeUpdate(state.t, yDisp);
             }
         };
-    }, [step, isPlaying, speedMultiplier, showTotalEnergy, onTimeUpdate]);
+    }, [step, isPlaying, speedMultiplier, showVectors, showVtGraph, showAtGraph, onTimeUpdate]);
 
     useEffect(() => {
         if (containerRef.current && !p5Ref.current) {
