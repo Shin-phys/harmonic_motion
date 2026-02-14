@@ -343,9 +343,6 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 // グラフ背景
                 p.fill(0, 0, 0, 40 * state.fadeAxis);
                 p.noStroke();
-                // Step 5の時はグラフを少し小さくしてスペースを空ける？ 
-                // あるいはエネルギーバーをグラフの上に重ねるか、横に置く
-                // レイアウト: グラフを少し左に詰めるわけにはいかないので、右端の空きスペースを利用
 
                 p.rect(graphLeft - 10, 30, graphWidth + 40, H - 60, 8);
 
@@ -409,7 +406,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         p.ellipse(currentPx, graphCy - yDisp, 16, 16);
                     }
 
-                    // ========== Step 6 & 7: v-t, a-t グラフ ==========
+                    // ========== Step 6 & 7: v-t, a-t グラフ ========== 
                     if (currentStep === 6 || currentStep === 7) {
                         // v-t グラフ (紫色)
                         if (showVtGraph) {
@@ -511,27 +508,19 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
         };
     }, [step, isPlaying, speedMultiplier, showVectors, showVtGraph, showAtGraph, onTimeUpdate]);
 
+    // p5インスタンスの管理（生成と破棄）
     useEffect(() => {
-        if (containerRef.current && !p5Ref.current) {
-            p5Ref.current = new p5(sketch, containerRef.current);
-        }
+        if (!containerRef.current) return;
 
+        // インスタンス生成
+        const p5Instance = new p5(sketch, containerRef.current);
+        p5Ref.current = p5Instance;
+
+        // クリーンアップ
         return () => {
-            if (p5Ref.current) {
-                p5Ref.current.remove();
-                p5Ref.current = null;
-            }
+            p5Instance.remove();
+            p5Ref.current = null;
         };
-    }, []);
-
-    // step / isPlaying / speed が変わったときにp5インスタンスを再生成
-    useEffect(() => {
-        if (p5Ref.current) {
-            p5Ref.current.remove();
-        }
-        if (containerRef.current) {
-            p5Ref.current = new p5(sketch, containerRef.current);
-        }
     }, [sketch]);
 
     // リセット用
