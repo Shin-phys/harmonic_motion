@@ -161,62 +161,65 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                     p.strokeWeight(2);
                     drawArrow(p, circCx + pos.x, circCy - pos.y, aEndX, aEndY, 6);
 
-                    // ========== Step 6: ベクトルの投影 ==========
-                    if (currentStep === 6) {
-                        // 1. 速度ベクトルのy成分（y軸の隣に表示）
-                        // y軸(projX)の少し右に配置
-                        const vProjX = projX + 25;
-                        const vProjStartY = circCy - pos.y;
-                        const vProjEndY = vProjStartY - vy * vScale; // y反転
+                    // ========== Step 6 & 7: ベクトルの投影とグラフ ========== 
+                    // Step 7でもStep 6の表示を維持する
+                    if (currentStep >= 6) {
+                        if (currentStep === 6 || currentStep === 7) {
+                            // 1. 速度ベクトルのy成分（y軸の隣に表示）
+                            // y軸(projX)の少し右に配置
+                            const vProjX = projX + 25;
+                            const vProjStartY = circCy - pos.y;
+                            const vProjEndY = vProjStartY - vy * vScale; // y反転
 
-                        // 補助線（等速円運動の速度ベクトルの先 → 投影ベクトルの先）
-                        p.stroke(...COLORS.purpleRGB, 80);
-                        p.strokeWeight(1);
-                        drawDashedLine(p, vEndX, vEndY, vProjX, vProjEndY, 3, 3);
+                            // 補助線（等速円運動の速度ベクトルの先 → 投影ベクトルの先）
+                            p.stroke(...COLORS.purpleRGB, 80);
+                            p.strokeWeight(1);
+                            drawDashedLine(p, vEndX, vEndY, vProjX, vProjEndY, 3, 3);
 
-                        // 投影ベクトル
-                        p.stroke(...COLORS.purpleRGB);
-                        p.strokeWeight(2);
-                        drawArrow(p, vProjX, vProjStartY, vProjX, vProjEndY, 6);
+                            // 投影ベクトル
+                            p.stroke(...COLORS.purpleRGB);
+                            p.strokeWeight(2);
+                            drawArrow(p, vProjX, vProjStartY, vProjX, vProjEndY, 6);
 
-                        // ラベル
-                        p.fill(...COLORS.purpleRGB);
-                        p.noStroke();
-                        p.textSize(10);
-                        p.textAlign(p.LEFT, p.CENTER);
-                        p.text('vy', vProjX + 5, (vProjStartY + vProjEndY) / 2);
+                            // ラベル
+                            p.fill(...COLORS.purpleRGB);
+                            p.noStroke();
+                            p.textSize(10);
+                            p.textAlign(p.LEFT, p.CENTER);
+                            p.text('vy', vProjX + 5, (vProjStartY + vProjEndY) / 2);
 
 
-                        // 2. 加速度ベクトルのy成分
-                        // 重心（円運動の点）を始点として表示するか、y軸上に投影するか
-                        // 要件: "加速度ベクトルの始点は質量mの物体の重心に"
-                        // これは円運動上の加速度ベクトル（オレンジ）を指していると思われる（既に描画）。
-                        // "補助線を薄い波線で描き、y成分を描写していることを理解しやすく"
-                        // よって、y軸上にも加速度成分を描画し、リンクさせる
+                            // 2. 加速度ベクトルのy成分
+                            // 重心（円運動の点）を始点として表示するか、y軸上に投影するか
+                            // 要件: "加速度ベクトルの始点は質量mの物体の重心に"
+                            // これは円運動上の加速度ベクトル（オレンジ）を指していると思われる（既に描画）。
+                            // "補助線を薄い波線で描き、y成分を描写していることを理解しやすく"
+                            // よって、y軸上にも加速度成分を描画し、リンクさせる
 
-                        const aProjX = projX; // y軸の中心 (重心)
-                        const aProjStartY = circCy - pos.y;
-                        const aProjEndY = aProjStartY - ay * aScale;
+                            const aProjX = projX; // y軸の中心 (重心)
+                            const aProjStartY = circCy - pos.y;
+                            const aProjEndY = aProjStartY - ay * aScale;
 
-                        // 補助線（加速度ベクトルの先 → 投影ベクトルの先）
-                        p.stroke(...COLORS.orangeRGB, 80);
-                        p.strokeWeight(1);
-                        // aEndX, aEndY は円軌道上の加速度ベクトルの終点
-                        // 投影された加速度ベクトルの終点は (aProjX, aProjEndY)
-                        // ここでは「ベクトルの先同士」を結ぶのが自然
-                        drawDashedLine(p, aEndX, aEndY, aProjX, aProjEndY, 3, 3);
+                            // 補助線（加速度ベクトルの先 → 投影ベクトルの先）
+                            p.stroke(...COLORS.orangeRGB, 80);
+                            p.strokeWeight(1);
+                            // aEndX, aEndY は円軌道上の加速度ベクトルの終点
+                            // 投影された加速度ベクトルの終点は (aProjX, aProjEndY)
+                            // ここでは「ベクトルの先同士」を結ぶのが自然
+                            drawDashedLine(p, aEndX, aEndY, aProjX, aProjEndY, 3, 3);
 
-                        // 投影ベクトル (y軸上の加速度)
-                        p.stroke(...COLORS.orangeRGB);
-                        p.strokeWeight(2);
-                        drawArrow(p, aProjX, aProjStartY, aProjX, aProjEndY, 6);
+                            // 投影ベクトル (y軸上の加速度)
+                            p.stroke(...COLORS.orangeRGB);
+                            p.strokeWeight(2);
+                            drawArrow(p, aProjX, aProjStartY, aProjX, aProjEndY, 6);
 
-                        // ラベル
-                        p.fill(...COLORS.orangeRGB);
-                        p.noStroke();
-                        p.textSize(10);
-                        p.textAlign(p.RIGHT, p.CENTER);
-                        p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
+                            // ラベル
+                            p.fill(...COLORS.orangeRGB);
+                            p.noStroke();
+                            p.textSize(10);
+                            p.textAlign(p.RIGHT, p.CENTER);
+                            p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
+                        }
                     }
                 }
             }
@@ -407,7 +410,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                     }
 
                     // ========== Step 6: v-t, a-t グラフ ==========
-                    if (currentStep === 6) {
+                    if (currentStep === 6 || currentStep === 7) {
                         // v-t グラフ (紫色)
                         if (showVtGraph) {
                             // スケール調整: vMax = A*omega. これをグラフ内に収めるためにスケールダウン
@@ -467,7 +470,6 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         drawDashedLine(p, projX + 15, circCy - pos.y, currentPx - 5, graphCy - yDisp, 5, 4);
                     }
                 }
-
                 // グラフタイトル
                 p.fill(255, 255, 255, alpha * 0.8);
                 p.noStroke();
