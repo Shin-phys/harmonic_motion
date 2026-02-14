@@ -20,8 +20,9 @@ export default function App() {
 
   // ========== Mode 1 状態 ==========
   const [step, setStep] = useState(1);
-  const [showTotalEnergy, setShowTotalEnergy] = useState(false); // Step 7用
-  const [showVectorsMode1, setShowVectorsMode1] = useState(false); // Step 2,3,4用
+  const [showVectorsMode1, setShowVectorsMode1] = useState(false); // Step 2,3,4専用
+  const [showVtGraph, setShowVtGraph] = useState(false); // Step 6 t-vグラフ
+  const [showAtGraph, setShowAtGraph] = useState(false); // Step 6 t-aグラフ
 
   // ========== Mode 2 状態 ==========
   const [phi, setPhi] = useState(Math.PI / 2); // 初期位相
@@ -118,8 +119,9 @@ export default function App() {
                 step={step}
                 isPlaying={isPlaying}
                 speedMultiplier={speedMultiplier}
-                showTotalEnergy={showTotalEnergy}
-                showVectors={showVectorsMode1} // 追加
+                showVectors={showVectorsMode1} // Step 2-4
+                showVtGraph={showVtGraph}      // Step 6
+                showAtGraph={showAtGraph}      // Step 6
                 onTimeUpdate={() => { }}
               />
             )}
@@ -157,10 +159,12 @@ export default function App() {
                 <Mode1Panel
                   step={step}
                   onStepChange={setStep}
-                  showTotalEnergy={showTotalEnergy}
-                  onShowTotalEnergyChange={setShowTotalEnergy}
                   showVectors={showVectorsMode1}
                   onShowVectorsChange={setShowVectorsMode1}
+                  showVtGraph={showVtGraph}
+                  onShowVtGraphChange={setShowVtGraph}
+                  showAtGraph={showAtGraph}
+                  onShowAtGraphChange={setShowAtGraph}
                 />
               )}
               {mode === 2 && (

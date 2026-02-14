@@ -1,14 +1,12 @@
-/**
- * Mode 1: 操作パネル
- * ステップ進行と概要解説
- */
 export default function Mode1Panel({
     step,
     onStepChange,
-    showTotalEnergy,
-    onShowTotalEnergyChange,
     showVectors,
-    onShowVectorsChange
+    onShowVectorsChange,
+    showVtGraph,
+    onShowVtGraphChange,
+    showAtGraph,
+    onShowAtGraphChange
 }) {
     const stepsConfig = [
         {
@@ -118,17 +116,23 @@ export default function Mode1Panel({
                 </div>
             )}
 
-            {/* Step 7: エネルギー表示ボタン */}
-            {step === 7 && (
-                <div className="mt-4 fade-in">
+            {/* Step 6: グラフ表示切り替えボタン */}
+            {step === 6 && (
+                <div className="mt-4 fade-in space-y-2">
                     <button
-                        className={`btn w-full ${showTotalEnergy ? 'btn-success' : 'btn-secondary'} border border-slate-600`}
-                        onClick={() => onShowTotalEnergyChange(!showTotalEnergy)}
+                        className={`btn w-full ${showVtGraph ? 'bg-purple-600 text-white' : 'btn-secondary'} border border-slate-600 text-xs`}
+                        onClick={() => onShowVtGraphChange(!showVtGraph)}
                     >
-                        {showTotalEnergy ? '力学的エネルギーを表示中 (ON)' : '力学的エネルギーを表示 (OFF)'}
+                        {showVtGraph ? 'v-t グラフ (速度) を表示中' : 'v-t グラフ (速度) を表示'}
                     </button>
-                    <p className="text-xs text-slate-400 mt-2 text-center">
-                        ボタンを押すと、力学的エネルギー（合計）のバーが表示されます。
+                    <button
+                        className={`btn w-full ${showAtGraph ? 'bg-orange-600 text-white' : 'btn-secondary'} border border-slate-600 text-xs`}
+                        onClick={() => onShowAtGraphChange(!showAtGraph)}
+                    >
+                        {showAtGraph ? 'a-t グラフ (加速度) を表示中' : 'a-t グラフ (加速度) を表示'}
+                    </button>
+                    <p className="text-xs text-slate-400 mt-1 pl-1">
+                        ※ y-tグラフの上に重ねて表示します
                     </p>
                 </div>
             )}

@@ -11,12 +11,13 @@ import {
  * Mode 1: 円運動から単振動への展開
  * 等速円運動 → y軸投影 → バネ接続 → y-tグラフ生成 → エネルギー保存
  */
-export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTotalEnergy, showVectors, onTimeUpdate }) {
+export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVectors, showVtGraph, showAtGraph, onTimeUpdate }) {
     const containerRef = useRef(null);
     const p5Ref = useRef(null);
     const stateRef = useRef({
         t: 0,
-        trail: [],      // y-tグラフ用の軌跡データ
+        t: 0,
+        trail: [],      // y-tグラフ用の軌跡データ {t, y, v, a}
         graphOffset: 0,  // グラフスクロール用オフセット
         fadeAxis: 0,     // 軸のフェードインアニメーション
     });
@@ -65,6 +66,9 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
             // 円運動の計算
             const pos = circularPosition(A, omega, state.t, phi);
             const yDisp = displacement(A, omega, state.t, phi);
+            // v-t, a-t用計算
+            const vY = A * omega * Math.cos(omega * state.t + phi); // 単振動の速度v = dy/dt
+            const aY = -A * omega * omega * Math.sin(omega * state.t + phi); // 単振動の加速度a = d^2y/dt^2
 
             // ========== Step 1: 等速円運動 ==========
             if (currentStep >= 1) {
@@ -191,13 +195,16 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
                         // "補助線を薄い波線で描き、y成分を描写していることを理解しやすく"
                         // よって、y軸上にも加速度成分を描画し、リンクさせる
 
-                        const aProjX = projX - 25; // y軸の左側
+                        const aProjX = projX; // y軸の中心 (重心)
                         const aProjStartY = circCy - pos.y;
                         const aProjEndY = aProjStartY - ay * aScale;
 
                         // 補助線（加速度ベクトルの先 → 投影ベクトルの先）
                         p.stroke(...COLORS.orangeRGB, 80);
                         p.strokeWeight(1);
+                        // aEndX, aEndY は円軌道上の加速度ベクトルの終点
+                        // 投影された加速度ベクトルの終点は (aProjX, aProjEndY)
+                        // ここでは「ベクトルの先同士」を結ぶのが自然
                         drawDashedLine(p, aEndX, aEndY, aProjX, aProjEndY, 3, 3);
 
                         // 投影ベクトル (y軸上の加速度)
@@ -210,7 +217,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
                         p.noStroke();
                         p.textSize(10);
                         p.textAlign(p.RIGHT, p.CENTER);
-                        p.text('ay', aProjX - 5, (aProjStartY + aProjEndY) / 2);
+                        p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
                     }
                 }
             }
@@ -323,7 +330,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
 
                 // 軌跡データの追加
                 if (playing) {
-                    state.trail.push({ t: state.t, y: yDisp });
+                    state.trail.push({ t: state.t, y: yDisp, v: vY, a: aY });
                     // 最大数制限
                     if (state.trail.length > 2000) {
                         state.trail.shift();
@@ -400,6 +407,60 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
                         p.ellipse(currentPx, graphCy - yDisp, 16, 16);
                     }
 
+                    // ========== Step 6: v-t, a-t グラフ ==========
+                    if (currentStep === 6) {
+                        // v-t グラフ (紫色)
+                        if (showVtGraph) {
+                            // スケール調整: vMax = A*omega. これをグラフ内に収めるためにスケールダウン
+                            // A=80付近になるように調整
+                            const vScaleFactor = 0.5;
+                            // v = A*omega ~ 80*2 = 160. 160*0.5 = 80.
+
+                            p.stroke(...COLORS.purpleRGB, alpha * 0.8);
+                            p.strokeWeight(1.5);
+                            p.noFill();
+                            p.beginShape();
+                            for (const pt of state.trail) {
+                                const px = graphLeft + (pt.t - scrollT) * tScale;
+                                if (px >= graphLeft && px <= graphRight) {
+                                    p.vertex(px, graphCy - pt.v * vScaleFactor);
+                                }
+                            }
+                            p.endShape();
+                            // 現在点
+                            if (currentPx >= graphLeft && currentPx <= graphRight) {
+                                p.fill(...COLORS.purpleRGB);
+                                p.noStroke();
+                                p.ellipse(currentPx, graphCy - vY * vScaleFactor, 6, 6);
+                            }
+                        }
+
+                        // a-t グラフ (オレンジ色)
+                        if (showAtGraph) {
+                            // スケール調整: aMax = A*omega^2 ~ 80*4 = 320. 
+                            const aScaleFactor = 0.25;
+                            // 320*0.25 = 80.
+
+                            p.stroke(...COLORS.orangeRGB, alpha * 0.8);
+                            p.strokeWeight(1.5);
+                            p.noFill();
+                            p.beginShape();
+                            for (const pt of state.trail) {
+                                const px = graphLeft + (pt.t - scrollT) * tScale;
+                                if (px >= graphLeft && px <= graphRight) {
+                                    p.vertex(px, graphCy - pt.a * aScaleFactor);
+                                }
+                            }
+                            p.endShape();
+                            // 現在点
+                            if (currentPx >= graphLeft && currentPx <= graphRight) {
+                                p.fill(...COLORS.orangeRGB);
+                                p.noStroke();
+                                p.ellipse(currentPx, graphCy - aY * aScaleFactor, 6, 6);
+                            }
+                        }
+                    }
+
                     // 水平補助線: バネの重り → グラフの現在点
                     if (currentStep >= 3 && currentPx >= graphLeft) {
                         p.stroke(...COLORS.primaryRGB, 50);
@@ -437,7 +498,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showTota
                 const energyX = 380;
                 const energyY = circCy + A + 80;
 
-                drawEnergyBars(p, energyX, energyY, KE, PE, totalE, COLORS.primaryRGB, showTotalEnergy);
+                drawEnergyBars(p, energyX, energyY, KE, PE, totalE, COLORS.primaryRGB, true);
             }
 
             // 時間表示
