@@ -148,8 +148,8 @@ export default function Mode2Panel({
             <div className="formula-card">
                 <p className="formula-label">主要な関係式</p>
                 <div className="space-y-1.5">
-                    <KatexMath latex="v = A\omega \cos(\omega t + \phi)" className="text-xs" />
-                    <KatexMath latex="a = -A\omega^2 \sin(\omega t + \phi) = -\omega^2 y" className="text-xs" />
+                    <KatexMath latex="v = A\omega \cos(\omega t + \phi)" className="text-xs" />{', '}
+                    <KatexMath latex="a = -A\omega^2 \sin(\omega t + \phi) = -\omega^2 y" className="text-xs" />{', '}
                     <KatexMath latex="F = ma = -kx" className="text-xs" />
                 </div>
             </div>
