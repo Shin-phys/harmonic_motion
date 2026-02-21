@@ -10,7 +10,7 @@ export default function GlobalControls({
     onSpeedChange
 }) {
     return (
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap">
             {/* リセットボタン */}
             <button
                 id="btn-reset"
@@ -46,7 +46,7 @@ export default function GlobalControls({
             </button>
 
             {/* スピードコントロール */}
-            <div className="flex items-center gap-1.5 ml-1">
+            <div className="flex items-center gap-2 ml-1">
                 <span className="text-xs text-slate-500 font-medium">速度</span>
                 {[0.25, 0.5, 1.0].map((speed) => (
                     <button
