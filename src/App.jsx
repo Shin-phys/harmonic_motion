@@ -6,6 +6,8 @@ import Mode2Canvas from './components/Mode2Canvas';
 import Mode2Panel from './components/Mode2Panel';
 import Mode3Canvas from './components/Mode3Canvas';
 import Mode3Panel from './components/Mode3Panel';
+import Mode4Canvas from './components/Mode4Canvas';
+import Mode4Panel from './components/Mode4Panel';
 
 /**
  * 単振動シミュレータ メインアプリケーション
@@ -37,6 +39,12 @@ export default function App() {
   const [phaseDiffEnabled, setPhaseDiffEnabled] = useState(false);
   const [phaseDiff, setPhaseDiff] = useState(0);
 
+  // ========== Mode 4 状態 ==========
+  const [mu, setMu] = useState(0.1);
+  const [showEquilibrium, setShowEquilibrium] = useState(true);
+  const [showEnvelope, setShowEnvelope] = useState(false);
+  const [showEqPlot, setShowEqPlot] = useState(false);
+
   // ========== ハンドラ ==========
   const handleReset = useCallback(() => {
     setResetKey((k) => k + 1);
@@ -45,6 +53,11 @@ export default function App() {
 
   const handlePlayPause = useCallback(() => {
     setIsPlaying((p) => !p);
+  }, []);
+
+  const handleResetAndStart = useCallback(() => {
+    setResetKey((k) => k + 1);
+    setIsPlaying(true);
   }, []);
 
   const handleModeChange = useCallback((newMode) => {
@@ -64,6 +77,7 @@ export default function App() {
     { id: 1, label: 'Mode 1', title: '円運動から単振動へ', icon: '🔵' },
     { id: 2, label: 'Mode 2', title: '位相と式の理解', icon: '📐' },
     { id: 3, label: 'Mode 3', title: '二つの振動の比較', icon: '🔗' },
+    { id: 4, label: 'Mode 4', title: '摩擦のある振動', icon: '🔥' },
   ];
 
   return (
@@ -152,6 +166,18 @@ export default function App() {
                 onTimeUpdate={() => { }}
               />
             )}
+            {mode === 4 && (
+              <Mode4Canvas
+                key={`m4-${resetKey}`}
+                isPlaying={isPlaying}
+                speedMultiplier={speedMultiplier}
+                mu={mu}
+                showEquilibrium={showEquilibrium}
+                showEnvelope={showEnvelope}
+                showEqPlot={showEqPlot}
+                onTimeUpdate={() => { }}
+              />
+            )}
           </div>
 
           {/* 右側: 操作パネル */}
@@ -193,6 +219,19 @@ export default function App() {
                   onPhaseDiffEnabledChange={(val) => updateParams(() => setPhaseDiffEnabled(val))}
                   phaseDiff={phaseDiff}
                   onPhaseDiffChange={(val) => updateParams(() => setPhaseDiff(val))}
+                />
+              )}
+              {mode === 4 && (
+                <Mode4Panel
+                  mu={mu}
+                  onMuChange={(val) => updateParams(() => setMu(val))}
+                  showEquilibrium={showEquilibrium}
+                  onShowEquilibriumChange={setShowEquilibrium}
+                  showEnvelope={showEnvelope}
+                  onShowEnvelopeChange={setShowEnvelope}
+                  showEqPlot={showEqPlot}
+                  onShowEqPlotChange={setShowEqPlot}
+                  onResetAndStart={handleResetAndStart}
                 />
               )}
             </div>
