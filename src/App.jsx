@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import GlobalControls from './components/GlobalControls';
 import Mode1Canvas from './components/Mode1Canvas';
 import Mode1Panel from './components/Mode1Panel';
@@ -14,18 +14,19 @@ import Mode3Panel from './components/Mode3Panel';
 export default function App() {
   // ========== グローバル状態 ==========
   const [mode, setMode] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false); // 初期状態は停止
+  const [isPlaying, setIsPlaying] = useState(false);
   const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
   const [resetKey, setResetKey] = useState(0);
 
   // ========== Mode 1 状態 ==========
   const [step, setStep] = useState(1);
-  const [showVectorsMode1, setShowVectorsMode1] = useState(false); // Step 2,3,4専用
-  const [showVtGraph, setShowVtGraph] = useState(false); // Step 6 t-vグラフ
-  const [showAtGraph, setShowAtGraph] = useState(false); // Step 6 t-aグラフ
+  const [showVectorsMode1, setShowVectorsMode1] = useState(false);
+  const [showYtGraph, setShowYtGraph] = useState(true);
+  const [showVtGraph, setShowVtGraph] = useState(false);
+  const [showAtGraph, setShowAtGraph] = useState(false);
 
   // ========== Mode 2 状態 ==========
-  const [phi, setPhi] = useState(Math.PI / 2); // 初期位相
+  const [phi, setPhi] = useState(Math.PI / 2);
   const [showVectors, setShowVectors] = useState(false);
   const [graphType, setGraphType] = useState('y');
 
@@ -39,7 +40,7 @@ export default function App() {
   // ========== ハンドラ ==========
   const handleReset = useCallback(() => {
     setResetKey((k) => k + 1);
-    setIsPlaying(false); // リセット時は停止
+    setIsPlaying(false);
   }, []);
 
   const handlePlayPause = useCallback(() => {
@@ -49,10 +50,9 @@ export default function App() {
   const handleModeChange = useCallback((newMode) => {
     setMode(newMode);
     setResetKey((k) => k + 1);
-    setIsPlaying(false); // モード変更時も停止
+    setIsPlaying(false);
   }, []);
 
-  // パラメータ変更時の共通処理（変更、リセット、停止）
   const updateParams = (updater) => {
     updater();
     setResetKey((k) => k + 1);
@@ -61,26 +61,26 @@ export default function App() {
 
   // モードタブ定義
   const modes = [
-    { id: 1, label: 'Mode 1', title: '円運動から単振動へ' },
-    { id: 2, label: 'Mode 2', title: '位相と式の理解' },
-    { id: 3, label: 'Mode 3', title: '二つの振動の比較' },
+    { id: 1, label: 'Mode 1', title: '円運動から単振動へ', icon: '🔵' },
+    { id: 2, label: 'Mode 2', title: '位相と式の理解', icon: '📐' },
+    { id: 3, label: 'Mode 3', title: '二つの振動の比較', icon: '🔗' },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)' }}>
+    <div className="min-h-screen flex flex-col"
+      style={{ background: 'linear-gradient(160deg, #0B0F19 0%, #111827 40%, #0F172A 70%, #0B0F19 100%)' }}>
+
       {/* ========== ヘッダー ========== */}
-      <header className="px-6 py-4 border-b border-slate-700/50">
+      <header className="app-header">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-              単振動シミュレータ
+            <h1 className="app-title">
+              ⚛ 単振動シミュレータ
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="app-subtitle">
               Simple Harmonic Motion — Interactive Simulator
             </p>
           </div>
-
-          {/* グローバルコントロール */}
           <GlobalControls
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
@@ -92,8 +92,8 @@ export default function App() {
       </header>
 
       {/* ========== モードタブ ========== */}
-      <nav className="px-6 border-b border-slate-700/30">
-        <div className="max-w-7xl mx-auto flex">
+      <nav className="mode-tabs">
+        <div className="max-w-7xl mx-auto flex w-full">
           {modes.map((m) => (
             <button
               key={m.id}
@@ -101,7 +101,7 @@ export default function App() {
               className={`mode-tab ${mode === m.id ? 'active' : ''}`}
               onClick={() => handleModeChange(m.id)}
             >
-              <span className="text-xs opacity-60 mr-1">{m.label}</span>
+              <span className="mode-label">{m.label}</span>
               {m.title}
             </button>
           ))}
@@ -111,6 +111,7 @@ export default function App() {
       {/* ========== メインコンテンツ ========== */}
       <main className="flex-1 px-6 py-5">
         <div className="max-w-7xl mx-auto app-layout flex gap-5" style={{ minHeight: '520px' }}>
+
           {/* 左側: Canvas */}
           <div className="flex-1 min-w-0">
             {mode === 1 && (
@@ -119,9 +120,10 @@ export default function App() {
                 step={step}
                 isPlaying={isPlaying}
                 speedMultiplier={speedMultiplier}
-                showVectors={showVectorsMode1} // Step 2-4
-                showVtGraph={showVtGraph}      // Step 6
-                showAtGraph={showAtGraph}      // Step 6
+                showVectors={showVectorsMode1}
+                showYtGraph={showYtGraph}
+                showVtGraph={showVtGraph}
+                showAtGraph={showAtGraph}
                 onTimeUpdate={() => { }}
               />
             )}
@@ -161,6 +163,8 @@ export default function App() {
                   onStepChange={setStep}
                   showVectors={showVectorsMode1}
                   onShowVectorsChange={setShowVectorsMode1}
+                  showYtGraph={showYtGraph}
+                  onShowYtGraphChange={setShowYtGraph}
                   showVtGraph={showVtGraph}
                   onShowVtGraphChange={setShowVtGraph}
                   showAtGraph={showAtGraph}
@@ -197,7 +201,7 @@ export default function App() {
       </main>
 
       {/* ========== フッター ========== */}
-      <footer className="px-6 py-3 border-t border-slate-700/30 text-center text-xs text-slate-500">
+      <footer className="app-footer">
         高校物理「単振動」教育シミュレータ — 数式とアニメーションの完全同期
       </footer>
     </div>

@@ -154,6 +154,12 @@ export function phaseToLatex(phi) {
     if (Math.abs(fraction - 2 / 3) < 0.01) return '\\frac{2\\pi}{3}';
     if (Math.abs(fraction - 3 / 4) < 0.01) return '\\frac{3\\pi}{4}';
     if (Math.abs(fraction - 5 / 6) < 0.01) return '\\frac{5\\pi}{6}';
+    if (Math.abs(fraction - 7 / 6) < 0.01) return '\\frac{7\\pi}{6}';
+    if (Math.abs(fraction - 5 / 4) < 0.01) return '\\frac{5\\pi}{4}';
+    if (Math.abs(fraction - 4 / 3) < 0.01) return '\\frac{4\\pi}{3}';
+    if (Math.abs(fraction - 5 / 3) < 0.01) return '\\frac{5\\pi}{3}';
+    if (Math.abs(fraction - 7 / 4) < 0.01) return '\\frac{7\\pi}{4}';
+    if (Math.abs(fraction - 11 / 6) < 0.01) return '\\frac{11\\pi}{6}';
 
     return `${fraction.toFixed(2)}\\pi`;
 }

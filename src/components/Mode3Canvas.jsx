@@ -220,9 +220,9 @@ export default function Mode3Canvas({
             plotTrail(state.trail1, graphCy1, A1, COLORS.primaryRGB);
             plotTrail(state.trail2, graphCy2, A2, COLORS.accentRGB);
 
-            // ========== エネルギー棒グラフ ==========
-            drawEnergyBars(p, 200, row1Cy + A1 + 15, KE1, PE1, E1, COLORS.primaryRGB, true);
-            drawEnergyBars(p, 200, row2Cy + A2 + 15, KE2, PE2, E2, COLORS.accentRGB, true);
+            // ========== エネルギー棒グラフ（削除） ==========
+            // drawEnergyBars(p, 200, row1Cy + A1 + 15, KE1, PE1, E1, COLORS.primaryRGB, true);
+            // drawEnergyBars(p, 200, row2Cy + A2 + 15, KE2, PE2, E2, COLORS.accentRGB, true);
 
             // 水平補助線（2つのバネ系を結ぶ）
             if (phaseDiffEnabled) {
