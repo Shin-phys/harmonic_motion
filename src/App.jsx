@@ -241,7 +241,7 @@ export default function App() {
 
       {/* ========== フッター ========== */}
       <footer className="app-footer">
-        高校物理「単振動」教育シミュレータ — 数式とアニメーションの完全同期
+        高校物理「単振動」シミュレータ — 射影からばね振動まで
       </footer>
     </div>
   );
