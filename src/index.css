@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind CSS v4 の読み込み（v3 の @tailwind 指令では v4 のユーティリティが生成されない） */
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 /* ============================
    デザインシステム
@@ -37,10 +37,14 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* 余白のリセットは base レイヤーに入れる
+   （レイヤー外に書くと、Tailwind v4 の p-4・mx-0.5 などのユーティリティより強くなり、効かなくなる） */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 body {
@@ -642,8 +646,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* ============================
    レスポンシブ
    ============================ */
-@media (max-width: 1024px) {
-  .app-layout {
-    flex-direction: column !important;
-  }
+/* ============================
+   図（p5 の Canvas）を枠の大きさに合わせて伸縮させる
+   描画は 800×500（800×560）の座標のまま、表示の大きさだけを変える
+   ============================ */
+.canvas-frame .canvas-container {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: 1px solid var(--border-glow);
+}
+
+.canvas-frame canvas {
+  width: var(--cw) !important;
+  height: var(--ch) !important;
 }

@@ -39,9 +39,9 @@ export default function Mode1Panel({
         {
             id: 3,
             title: 'Step 3',
-            name: 'バネ接続',
-            desc: '投影点にバネを接続します。バネの伸縮と投影点の動きが完全に一致します。',
-            detail: 'バネの復元力 F = −kx が、この単振動を生み出します。',
+            name: 'ばね振り子にする',
+            desc: '投影点の位置に、ばねにつるしたおもりを置きます。おもりの動きと投影点の動きは完全に一致します。',
+            detail: '振動の中心は、ばねの自然長の位置ではなく「つり合いの位置」です。つり合いの位置からの変位を y とすると、おもりにはたらく力（ばねの弾性力と重力の合力）は F = −ky となり、これが単振動を生み出します。',
         },
         {
             id: 4,
@@ -61,15 +61,15 @@ export default function Mode1Panel({
             id: 6,
             title: 'Step 6',
             name: 'ベクトルの投影',
-            desc: '速度ベクトルと加速度ベクトルをy軸へ投影します。',
-            detail: '速度のy成分はy軸の隣に、加速度ベクトルは重心を始点として表示されます。',
+            desc: '円運動の速度ベクトルと加速度ベクトルを y 軸へ投影します。',
+            detail: '速度の y 成分は y 軸の右に、加速度の y 成分はおもりの中心から表示します。加速度はいつも振動の中心を向き、a = −ω²y となります。',
         },
         {
             id: 7,
             title: 'Step 7',
             name: 'エネルギー保存',
-            desc: '運動エネルギーと弾性エネルギーの変化を観察します。',
-            detail: '摩擦がない場合、二つのエネルギーの和（力学的エネルギー）は常に一定です。',
+            desc: '運動エネルギー K と位置エネルギー U の変化を観察します。',
+            detail: 'つり合いの位置からの変位 y を使うと、位置エネルギーは U = ½ky²（弾性力と重力の位置エネルギーをまとめたもの）と表せ、K + U はいつも一定です。',
         },
     ];
 
@@ -96,7 +96,9 @@ export default function Mode1Panel({
                     <div key={s.id} className="flex items-center">
                         <div
                             className={`step-dot ${s.id === step ? 'active' : i < currentStepIndex ? 'completed' : ''}`}
-                            title={`${s.title}: ${s.name}`}
+                            title={`Step ${i + 1}: ${s.name}`}
+                            role="button"
+                            aria-label={`Step ${i + 1}: ${s.name}`}
                             style={{ cursor: 'pointer' }}
                             onClick={() => onStepChange(s.id)}
                         />
@@ -110,7 +112,7 @@ export default function Mode1Panel({
             {/* 現在のステップ情報 */}
             <div className="fade-in" key={step}>
                 <h3 className="step-title">
-                    <span className="step-number">{currentStepConfig?.title}:</span>
+                    <span className="step-number">Step {currentStepIndex + 1}:</span>
                     <span className="step-name">{currentStepConfig?.name}</span>
                 </h3>
                 <p className="text-sm text-slate-300 mb-3 leading-relaxed">
@@ -170,8 +172,8 @@ export default function Mode1Panel({
                         a-t グラフ（加速度）
                     </button>
 
-                    <p className="text-xs text-slate-500 pl-5">
-                        ※ グラフ領域に重ねて表示します
+                    <p className="text-xs text-slate-400 pl-5">
+                        ※ 3 つのグラフは同じ時間軸に重ねて表示します（縦軸の目盛りはそれぞれ異なります）
                     </p>
                 </div>
             )}

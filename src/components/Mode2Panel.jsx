@@ -99,7 +99,7 @@ export default function Mode2Panel({
                     <KatexMath latex={generalForm} displayMode />
                 </div>
 
-                <p className="formula-label">特殊形</p>
+                <p className="formula-label">sin・cos で書くと</p>
                 <div className="text-center mb-3">
                     <KatexMath latex={specialForm.latex} displayMode />
                 </div>
@@ -118,7 +118,7 @@ export default function Mode2Panel({
                         onChange={(e) => onShowVectorsChange(e.target.checked)}
                     />
                     <span>
-                        ベクトル表示（変位 <span style={{ color: '#10B981' }}>x</span> & 復元力 <span style={{ color: '#EF4444' }}>F = −kx</span>）
+                        ベクトル表示（変位 <span style={{ color: '#10B981' }}>y</span> と 復元力 <span style={{ color: '#EF4444' }}>F = −ky</span>）
                     </span>
                 </label>
             </div>
@@ -150,7 +150,7 @@ export default function Mode2Panel({
                 <div className="space-y-1.5">
                     <KatexMath latex="v = A\omega \cos(\omega t + \phi)" className="text-xs" />{' '}
                     <KatexMath latex="a = -A\omega^2 \sin(\omega t + \phi) = -\omega^2 y" className="text-xs" />{' '}
-                    <KatexMath latex="F = ma = -kx" className="text-xs" />
+                    <KatexMath latex="F = ma = -m\omega^2 y = -ky \quad (k = m\omega^2)" className="text-xs" />
                 </div>
             </div>
         </div>

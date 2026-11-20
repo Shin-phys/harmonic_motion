@@ -1,18 +1,22 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import p5 from 'p5';
-import { COLORS, drawSpring, drawDashedLine, drawGrid } from '../utils/physics';
+import { COLORS, MODE4, drawSpring, drawDashedLine, drawGrid } from '../utils/physics';
 
 /**
  * Mode 4: 摩擦のある振動
  * 上段: 摩擦なし（解析解）、下段: 摩擦あり（シンプレクティック・オイラー）
  */
-export default function Mode4Canvas({
-    isPlaying, speedMultiplier, mu,
-    showEquilibrium, showEnvelope, showEqPlot,
-    onTimeUpdate
-}) {
+// 物理パラメータ（utils/physics.js の MODE4 と共通）
+const { m, k, A0, g, muStaticExtra } = MODE4;
+const omega = Math.sqrt(k / m);
+const pxScale = 70;
+
+export default function Mode4Canvas(props) {
+    const propsRef = useRef(props);
+    useEffect(() => {
+        propsRef.current = props;
+    });
     const containerRef = useRef(null);
-    const p5Ref = useRef(null);
     const stateRef = useRef({
         t: 0,
         x_f: 1.0, v_f: 0, stopped: false,
@@ -21,12 +25,12 @@ export default function Mode4Canvas({
         eqPoints: [],
     });
 
-    // 物理パラメータ
-    const m = 1.0, k = 10.0, A0 = 1.0, g = 4.0;
-    const omega = Math.sqrt(k / m);
-    const pxScale = 70;
 
-    const sketch = useCallback((p) => {
+    // p5 は1回だけ作る（再生・停止や表示の切り替えは propsRef から毎フレーム読む）
+    useEffect(() => {
+        if (!containerRef.current) return undefined;
+        const { mu } = propsRef.current;
+        const sketch = (p) => {
         const W = 800, H = 560;
         // レイアウト
         const sys1Cy = 120, sys2Cy = 390;
@@ -36,10 +40,11 @@ export default function Mode4Canvas({
         const graph1Cy = 120, graph2Cy = 390;
         const graphAmpPx = 80;
 
-        p.setup = () => { p.createCanvas(W, H); p.textFont('Inter'); };
+        p.setup = () => { p.pixelDensity(2); p.createCanvas(W, H); p.textFont('Inter'); };
 
         p.draw = () => {
             const state = stateRef.current;
+            const { isPlaying, speedMultiplier, showEquilibrium, showEnvelope, showEqPlot } = propsRef.current;
             p.background(13, 17, 23);
             drawGrid(p, W, H, 50);
 
@@ -67,7 +72,8 @@ export default function Mode4Canvas({
                                 const eqY = oldV > 0 ? -mu * m * g / k : mu * m * g / k;
                                 state.eqPoints.push({ t: state.t, y: eqY });
                             }
-                            if (mu > 0 && Math.abs(k * state.x_f) <= (mu + 0.05) * m * g) {
+                            // 速度が 0 になった瞬間、弾性力が最大静止摩擦力以下なら止まる（μ = μ' + 0.05）
+                            if (mu > 0 && Math.abs(k * state.x_f) <= (mu + muStaticExtra) * m * g) {
                                 state.v_f = 0;
                                 state.stopped = true;
                             }
@@ -90,7 +96,7 @@ export default function Mode4Canvas({
             // ── 系2: 摩擦あり ──
             drawSys(p, sysLeft, sys2Cy, eqX, yFric * pxScale, `摩擦あり (μ'=${mu.toFixed(2)})`, COLORS.accentRGB, true);
 
-            // 動的平衡点ライン
+            // 振動の中心（速度の向きで ±μ'mg/k ずれる）
             if (showEquilibrium && !state.stopped && mu > 0) {
                 const eqPos = (state.v_f >= 0 ? -1 : 1) * mu * m * g / k;
                 const epx = eqX + eqPos * pxScale;
@@ -99,9 +105,9 @@ export default function Mode4Canvas({
                 drawDashedLine(p, epx, sys2Cy - 35, epx, sys2Cy + 35, 4, 3);
                 p.fill(16, 185, 129, 200);
                 p.noStroke();
-                p.textSize(8);
+                p.textSize(11);
                 p.textAlign(p.CENTER, p.TOP);
-                p.text('平衡点', epx, sys2Cy + 37);
+                p.text('振動の中心', epx, sys2Cy + 37);
             }
 
             // ── 区切り線 ──
@@ -111,18 +117,18 @@ export default function Mode4Canvas({
             // ラベル
             p.fill(255, 255, 255, 40);
             p.noStroke();
-            p.textSize(9);
+            p.textSize(11);
             p.textAlign(p.LEFT, p.CENTER);
             p.text('▲ 摩擦なし', 15, H / 2 - 8);
             p.text('▼ 摩擦あり', 15, H / 2 + 10);
 
             // ── y-tグラフ (上段: 摩擦なし) ──
             drawGraph(p, graphLeft, graphRight, graphW, graph1Cy, graphAmpPx,
-                state.trail1, COLORS.primaryRGB, 'y-t（摩擦なし）', null, null, false, false);
+                state.trail1, COLORS.primaryRGB, 'x-t（摩擦なし）', null, null, false, false);
 
             // ── y-tグラフ (下段: 摩擦あり + 包絡線 + 平衡点プロット) ──
             drawGraph(p, graphLeft, graphRight, graphW, graph2Cy, graphAmpPx,
-                state.trail2, COLORS.accentRGB, 'y-t（摩擦あり）',
+                state.trail2, COLORS.accentRGB, 'x-t（摩擦あり）',
                 showEnvelope ? state.peaks : null,
                 showEqPlot ? state.eqPoints : null,
                 showEquilibrium, mu);
@@ -143,7 +149,6 @@ export default function Mode4Canvas({
                 p.textAlign(p.CENTER, p.BOTTOM);
                 p.text('⏸ 一時停止中', W / 2, H - 10);
             }
-            if (onTimeUpdate) onTimeUpdate(state.t, { yClean, yFric });
         };
 
         // ── 水平バネ系の描画 ──
@@ -176,7 +181,7 @@ export default function Mode4Canvas({
             p.rectMode(p.CORNER);
             p.fill(255);
             p.noStroke();
-            p.textSize(10);
+            p.textSize(11);
             p.textAlign(p.CENTER, p.CENTER);
             p.text('m', mx, cy);
             // 摩擦面
@@ -190,7 +195,7 @@ export default function Mode4Canvas({
             // ラベル
             p.fill(255, 255, 255, 130);
             p.noStroke();
-            p.textSize(10);
+            p.textSize(11);
             p.textAlign(p.LEFT, p.TOP);
             p.text(label, left, cy - 56);
         }
@@ -214,13 +219,13 @@ export default function Mode4Canvas({
             // ラベル
             p.fill(255, 255, 255, 70);
             p.noStroke();
-            p.textSize(10);
+            p.textSize(11);
             p.textAlign(p.CENTER, p.TOP);
             p.text(title, (gL + gR) / 2, gCy - ampPx - 22);
             p.textAlign(p.RIGHT, p.CENTER);
-            p.textSize(9);
+            p.textSize(11);
             p.text('A', gL - 5, gCy - ampPx);
-            p.text('-A', gL - 5, gCy + ampPx);
+            p.text('−A', gL - 5, gCy + ampPx);
             p.textAlign(p.CENTER, p.TOP);
             p.text('t', gR + 10, gCy - 5);
 
@@ -240,10 +245,9 @@ export default function Mode4Canvas({
                 drawDashedLine(p, gL, gCy + eqPx, gR, gCy + eqPx, 3, 4);
                 p.fill(16, 185, 129, 60);
                 p.noStroke();
-                p.textSize(7);
+                p.textSize(11);
                 p.textAlign(p.LEFT, p.CENTER);
-                p.text('+μ\'mg/k', gR - 45, gCy - eqPx);
-                p.text('-μ\'mg/k', gR - 45, gCy + eqPx);
+                p.text('±μ\'mg/k', gR - 60, gCy - eqPx - 8);
             }
 
             // 波形プロット
@@ -302,14 +306,10 @@ export default function Mode4Canvas({
                 }
             }
         }
-    }, [isPlaying, speedMultiplier, mu, showEquilibrium, showEnvelope, showEqPlot, onTimeUpdate]);
-
-    useEffect(() => {
-        if (!containerRef.current) return;
+        };
         const inst = new p5(sketch, containerRef.current);
-        p5Ref.current = inst;
-        return () => { inst.remove(); p5Ref.current = null; };
-    }, [sketch]);
+        return () => inst.remove();
+    }, []);
 
     return <div ref={containerRef} className="canvas-container" />;
 }

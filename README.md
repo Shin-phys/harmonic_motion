@@ -1,16 +1,29 @@
-# React + Vite
+# 単振動シミュレータ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+高校物理「単振動」の学習用 Web アプリです。公開ページ：https://shin-phys.github.io/harmonic_motion/
 
-Currently, two official plugins are available:
+| モード | 内容 |
+|---|---|
+| Mode 1 円運動から単振動へ | 等速円運動 → y 軸への投影 → ばね振り子 → y-t 図 → 速度・加速度 → エネルギー（8 ステップ） |
+| Mode 2 位相と式の理解 | 初期位相 φ と式 y = A sin(ωt + φ)、y-t・v-t・a-t 図 |
+| Mode 3 二つの振動の比較 | 質量・ばね定数・振幅を変えて周期をくらべる（等時性）、位相差 |
+| Mode 4 摩擦のある振動 | 動摩擦による振動の中心のずれと、振幅の直線的な減少 |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+鉛直のばね振り子では、振動の中心は「つり合いの位置」として表示しています。
 
-## React Compiler
+## 画面の配置
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- PC（幅 1024px 以上）：図と操作パネルを左右に並べ、スクロールせずに使える 1 画面の配置
+- スマホ縦向き：図の下に操作パネル、再生・リセット・速度は画面下に固定
+- スマホ横向き：図と操作パネルを左右に並べる
 
-## Expanding the ESLint configuration
+図は 800×500（Mode 3・4 は 800×560）の座標で描き、表示枠に合わせて拡大・縮小します（`src/components/CanvasFrame.jsx`）。
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 開発
+
+```bash
+npm install
+npm run dev
+npm run build   # main への push で GitHub Pages に自動デプロイ
+npm run lint
+```

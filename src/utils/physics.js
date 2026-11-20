@@ -28,6 +28,12 @@ export const COLORS = {
 };
 
 /**
+ * Mode 4（摩擦のある振動）の設定
+ *  静止摩擦係数は μ = μ' + MU_STATIC_EXTRA とする（速度が 0 になった瞬間に止まるかの判定に使う）
+ */
+export const MODE4 = { m: 1.0, k: 10.0, A0: 1.0, g: 9.8, muStaticExtra: 0.05 };
+
+/**
  * 単振動の変位を計算
  * y = A * sin(ω * t + φ)
  */
@@ -132,7 +138,19 @@ export function formatPhase(phi) {
     if (Math.abs(fraction - 7 / 4) < 0.01) return '7π/4';
     if (Math.abs(fraction - 11 / 6) < 0.01) return '11π/6';
 
+    // π/12 の倍数なら分数で表す（位相差スライダーなど）
+    const n12 = Math.round(fraction * 12);
+    if (Math.abs(fraction * 12 - n12) < 0.01) {
+        const g = gcd(n12, 12);
+        const num = n12 / g;
+        const den = 12 / g;
+        return `${num === 1 ? '' : num}π/${den}`;
+    }
     return `${fraction.toFixed(2)}π`;
+}
+
+function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
 }
 
 /**
@@ -175,34 +193,34 @@ export function getSpecialForm(phi) {
     if (Math.abs(deg) < 3) {
         return {
             latex: 'y = A \\sin(\\omega t)',
-            explanation: '原点を通過し、上向きに運動を開始するので sin 型です。',
+            explanation: 'つり合いの位置から上向きに動き始めるので sin 型です。',
         };
     }
     // φ = π/2 → y = A cos(ωt) 山からスタート
     if (Math.abs(deg - 90) < 3) {
         return {
             latex: 'y = A \\cos(\\omega t)',
-            explanation: '最大変位（山）から運動を開始するので cos 型になります。',
+            explanation: 'いちばん上（y = A）から動き始めるので cos 型です。',
         };
     }
     // φ = π → y = -A sin(ωt) 原点から下向きスタート
     if (Math.abs(deg - 180) < 3) {
         return {
             latex: 'y = -A \\sin(\\omega t)',
-            explanation: '原点を通過し、下向きに運動を開始するので -sin 型です。',
+            explanation: 'つり合いの位置から下向きに動き始めるので −sin 型です。',
         };
     }
     // φ = 3π/2 → y = -A cos(ωt) 谷からスタート
     if (Math.abs(deg - 270) < 3) {
         return {
             latex: 'y = -A \\cos(\\omega t)',
-            explanation: '最小変位（谷）から運動を開始するので -cos 型になります。',
+            explanation: 'いちばん下（y = −A）から動き始めるので −cos 型です。',
         };
     }
 
     return {
         latex: `y = A \\sin(\\omega t + ${phaseToLatex(phi)})`,
-        explanation: `初期位相 φ = ${formatPhase(phi)} の一般的な sin 型です。`,
+        explanation: `t = 0 のとき、円運動の点は角度 φ = ${formatPhase(phi)} の位置から出発します。`,
     };
 }
 
@@ -324,9 +342,9 @@ export function drawEnergyBars(p, cx, cy, KE, PE, totalE, colorRGB, showTotal = 
     // ラベル
     p.fill(255, 255, 255, 120);
     p.noStroke();
-    p.textSize(10);
+    p.textSize(11);
     p.textAlign(p.CENTER, p.BOTTOM);
-    p.text('Energy', cx, barTop - 5);
+    p.text('エネルギー', cx, barTop - 5);
 
     // 力学的エネルギー（合計）枠
     if (showTotal) {
@@ -340,9 +358,9 @@ export function drawEnergyBars(p, cx, cy, KE, PE, totalE, colorRGB, showTotal = 
         // 力学的エネルギー（トータル）のラベル
         p.fill(255, 255, 255, 80);
         p.noStroke();
-        p.textSize(9);
+        p.textSize(11);
         p.textAlign(p.CENTER, p.TOP);
-        p.text('Total', cx, cy + 3);
+        p.text('合計', cx, cy + 18);
     }
 
     // 運動エネルギー（KE）
@@ -358,7 +376,7 @@ export function drawEnergyBars(p, cx, cy, KE, PE, totalE, colorRGB, showTotal = 
     p.rect(cx + 2, cy - peH, barWidth, peH, 2, 2, 0, 0);
 
     // ラベル
-    p.textSize(8);
+    p.textSize(11);
     p.fill(139, 92, 246, 200);
     p.textAlign(p.CENTER, p.TOP);
     p.text('K', cx - barWidth - 2 + barWidth / 2, cy + 3); // Kinetic
