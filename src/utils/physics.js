@@ -385,3 +385,20 @@ export function drawEnergyBars(p, cx, cy, KE, PE, totalE, colorRGB, showTotal = 
     p.textAlign(p.CENTER, p.TOP);
     p.text('U', cx + 2 + barWidth / 2, cy + 3); // Potential
 }
+
+/**
+ * 単振り子の周期
+ *  T0 = 2π√(L/g)（振れ角が小さいとき＝単振動とみなした周期）
+ *  振れ角 θ0 を考えた周期は T = T0 / AGM(1, cos(θ0/2))（算術幾何平均を使った厳密な式）
+ */
+export function pendulumPeriods(L, g, theta0) {
+    const T0 = 2 * Math.PI * Math.sqrt(L / g);
+    let a = 1;
+    let b = Math.cos(theta0 / 2);
+    for (let i = 0; i < 20 && Math.abs(a - b) > 1e-15; i++) {
+        const an = (a + b) / 2;
+        b = Math.sqrt(a * b);
+        a = an;
+    }
+    return { T0, T: T0 / a, ratio: 1 / a };
+}

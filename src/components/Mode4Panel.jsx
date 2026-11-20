@@ -38,7 +38,7 @@ export default function Mode4Panel({
             {/* タイトル */}
             <div>
                 <h3 className="step-title">
-                    <span className="step-number">Mode 4:</span>
+                    <span className="step-number">発展：</span>
                     <span className="step-name">摩擦のある振動</span>
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
