@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import p5 from 'p5';
 import {
     COLORS, circularPosition, displacement, velocity, acceleration,
@@ -9,21 +9,26 @@ import {
  * Mode 2: 初期位相と位相の式の理解
  * 位相設定、ベクトル可視化、v-t/a-t図
  */
-export default function Mode2Canvas({
-    isPlaying, speedMultiplier, phi, amplitude,
-    omega, showVectors, graphType, onTimeUpdate
-}) {
+
+export default function Mode2Canvas(props) {
+    const propsRef = useRef(props);
+    useEffect(() => {
+        propsRef.current = props;
+    });
     const containerRef = useRef(null);
-    const p5Ref = useRef(null);
     const stateRef = useRef({
         t: 0,
         trail: [],
     });
 
-    const A = amplitude || 80;
-    const w = omega || 2.0;
 
-    const sketch = useCallback((p) => {
+    // p5 は1回だけ作る（再生・停止や表示の切り替えは propsRef から毎フレーム読む）
+    useEffect(() => {
+        if (!containerRef.current) return undefined;
+        const { phi, amplitude, omega } = propsRef.current;
+        const A = amplitude || 80;
+        const w = omega || 2.0;
+        const sketch = (p) => {
         const W = 800;
         const H = 500;
 
@@ -39,6 +44,7 @@ export default function Mode2Canvas({
         const graphWidth = graphRight - graphLeft;
 
         p.setup = () => {
+            p.pixelDensity(2); // 拡大表示してもにじまないように
             p.createCanvas(W, H);
             p.textFont('Inter');
         };
@@ -49,8 +55,7 @@ export default function Mode2Canvas({
             drawGrid(p, W, H, 50);
 
             const currentPhi = phi;
-            const playing = isPlaying;
-            const speed = speedMultiplier;
+            const { isPlaying: playing, speedMultiplier: speed, showVectors, graphType } = propsRef.current;
 
             // 時間進行
             if (playing) {
@@ -153,10 +158,15 @@ export default function Mode2Canvas({
             p.textAlign(p.CENTER, p.CENTER);
             p.text('m', springX, springEndY);
 
-            // 自然長の位置
+            // つり合いの位置（振動の中心）
             p.stroke(255, 255, 255, 30);
             p.strokeWeight(1);
             drawDashedLine(p, springX - 30, circCy, springX + 30, circCy, 4, 3);
+            p.fill(255, 255, 255, 110);
+            p.noStroke();
+            p.textSize(11);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text('つり合いの位置', springX, circCy + A + 22);
 
             // 運動方向矢印（初速度表示）
             if (state.t < 0.1 || !playing) {
@@ -172,7 +182,7 @@ export default function Mode2Canvas({
                     drawArrow(p, arrowX, arrowY, arrowX, arrowY + arrowDir * arrowLen, 8);
                     p.fill(...COLORS.accentRGB, 200);
                     p.noStroke();
-                    p.textSize(10);
+                    p.textSize(11);
                     p.textAlign(p.LEFT, p.CENTER);
                     p.text(initV > 0 ? '↑ v₀' : '↓ v₀', arrowX + 5, arrowY + arrowDir * arrowLen / 2);
                 }
@@ -196,7 +206,7 @@ export default function Mode2Canvas({
                     p.noStroke();
                     p.textSize(11);
                     p.textAlign(p.RIGHT, p.CENTER);
-                    p.text('x', vecX - 42, circCy - y / 2);
+                    p.text('y', vecX - 42, circCy - y / 2);
                 }
 
                 // 復元力ベクトル（赤）
@@ -216,9 +226,9 @@ export default function Mode2Canvas({
                 // 常に中心を向いていることを示す注釈
                 p.fill(255, 255, 255, 80);
                 p.noStroke();
-                p.textSize(9);
+                p.textSize(11);
                 p.textAlign(p.CENTER, p.TOP);
-                p.text('F は常に中心方向 ↕', vecX, circCy + A + 35);
+                p.text('F は常に振動の中心を向く', vecX, circCy + A + 40);
             }
 
             // ========== グラフ ==========
@@ -319,27 +329,11 @@ export default function Mode2Canvas({
                 p.textAlign(p.CENTER, p.BOTTOM);
                 p.text('⏸ 一時停止中', W / 2, H - 10);
             }
-
-            if (onTimeUpdate) {
-                onTimeUpdate(state.t, y, v, a);
-            }
         };
-    }, [isPlaying, speedMultiplier, phi, amplitude, omega, showVectors, graphType, onTimeUpdate]);
-
-    useEffect(() => {
-        if (p5Ref.current) {
-            p5Ref.current.remove();
-        }
-        if (containerRef.current) {
-            p5Ref.current = new p5(sketch, containerRef.current);
-        }
-        return () => {
-            if (p5Ref.current) {
-                p5Ref.current.remove();
-                p5Ref.current = null;
-            }
         };
-    }, [sketch]);
+        const inst = new p5(sketch, containerRef.current);
+        return () => inst.remove();
+    }, []);
 
     return <div ref={containerRef} className="canvas-container" />;
 }

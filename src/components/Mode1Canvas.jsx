@@ -1,9 +1,8 @@
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import p5 from 'p5';
 import {
-    COLORS, circularPosition, displacement, velocity, acceleration,
-    kineticEnergy, potentialEnergy, drawEnergyBars,
+    COLORS, circularPosition, displacement, velocity,     kineticEnergy, potentialEnergy, drawEnergyBars,
     drawSpring, drawDashedLine, drawGrid, drawArrow
 } from '../utils/physics';
 
@@ -11,9 +10,17 @@ import {
  * Mode 1: 円運動から単振動への展開
  * 等速円運動 → y軸投影 → バネ接続 → y-tグラフ生成 → エネルギー保存
  */
-export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVectors, showYtGraph, showVtGraph, showAtGraph, onTimeUpdate }) {
+// パラメータ
+const A = 80;       // 振幅（ピクセル）
+const omega = 2.0;  // 角速度
+const phi = Math.PI / 2; // 初期位相（Step 1 は真上から開始 → cos 型の動き）
+
+export default function Mode1Canvas(props) {
+    const propsRef = useRef(props);
+    useEffect(() => {
+        propsRef.current = props;
+    });
     const containerRef = useRef(null);
-    const p5Ref = useRef(null);
     const stateRef = useRef({
         t: 0,
         trail: [],      // y-tグラフ用の軌跡データ {t, y, v, a}
@@ -21,12 +28,11 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
         fadeAxis: 0,     // 軸のフェードインアニメーション
     });
 
-    // パラメータ
-    const A = 80;       // 振幅（ピクセル）
-    const omega = 2.0;  // 角速度
-    const phi = Math.PI / 2; // 初期位相（Step1は上から開始でcos的動き）
 
-    const sketch = useCallback((p) => {
+    // p5 は1回だけ作る（再生・停止や表示の切り替えは propsRef から毎フレーム読む）
+    useEffect(() => {
+        if (!containerRef.current) return undefined;
+        const sketch = (p) => {
         const W = 800;
         const H = 500;
 
@@ -44,6 +50,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
         const graphWidth = graphRight - graphLeft;
 
         p.setup = () => {
+            p.pixelDensity(2); // 拡大表示してもにじまないように
             p.createCanvas(W, H);
             p.textFont('Inter');
         };
@@ -53,9 +60,10 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
             p.background(13, 17, 23);
             drawGrid(p, W, H, 50);
 
-            const currentStep = step;
-            const playing = isPlaying;
-            const speed = speedMultiplier;
+            const {
+                step: currentStep, isPlaying: playing, speedMultiplier: speed,
+                showVectors, showYtGraph, showVtGraph, showAtGraph,
+            } = propsRef.current;
 
             // 時間の進行
             if (playing) {
@@ -105,7 +113,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
 
                 // 角度表示
                 p.fill(...COLORS.accentRGB, 150);
-                p.textSize(10);
+                p.textSize(11);
                 const angleDeg = ((pos.angle * 180 / Math.PI) % 360).toFixed(0);
                 p.text(`θ = ${angleDeg}°`, circCx + A + 10, circCy - 10);
 
@@ -113,7 +121,9 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 p.noFill();
                 p.stroke(...COLORS.accentRGB, 80);
                 p.strokeWeight(1.5);
-                p.arc(circCx, circCy, 30, 30, -pos.angle, 0);
+                // 角度は 0〜2π に直してから描く（そのままだと 1 周後に全周の円になる）
+                const thetaN = ((pos.angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                if (thetaN > 0.01) p.arc(circCx, circCy, 30, 30, -thetaN, 0);
 
                 // ========== ベクトル描画 ==========
                 // Step 2-4: showVectors依存
@@ -127,10 +137,6 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 const showProjVec = (currentStep === 6 || currentStep === 7);
 
                 if (showCircleVec || showProjVec) {
-                    // 速度・加速度の計算
-                    const v = velocity(A, omega, state.t, phi);
-                    const a = acceleration(A, omega, state.t, phi);
-
                     // スケール調整 (以前の0.7倍)
                     // 元: vScale = 0.5, aScale = 0.25
                     const vScale = 0.35;
@@ -189,7 +195,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         // ラベル
                         p.fill(...COLORS.purpleRGB);
                         p.noStroke();
-                        p.textSize(10);
+                        p.textSize(11);
                         p.textAlign(p.LEFT, p.CENTER);
                         p.text('vy', vProjX + 5, (vProjStartY + vProjEndY) / 2);
 
@@ -214,7 +220,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                         // ラベル
                         p.fill(...COLORS.orangeRGB);
                         p.noStroke();
-                        p.textSize(10);
+                        p.textSize(11);
                         p.textAlign(p.RIGHT, p.CENTER);
                         p.text('ay', aProjX - 8, (aProjStartY + aProjEndY) / 2);
                     }
@@ -295,16 +301,17 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 p.textAlign(p.CENTER, p.CENTER);
                 p.text('m', springAnchorX, springEndY);
 
-                // 自然長の位置を示す点線
+                // つり合いの位置（振動の中心）を示す点線
+                // 鉛直ばね振り子では、振動の中心は自然長の位置ではなく、重力とつり合う位置
                 p.stroke(255, 255, 255, 30);
                 p.strokeWeight(1);
                 drawDashedLine(p, springAnchorX - 30, circCy, springAnchorX + 30, circCy, 4, 3);
 
-                // 自然長ラベル
-                p.fill(255, 255, 255, 80);
-                p.textSize(9);
-                p.textAlign(p.RIGHT, p.CENTER);
-                p.text('自然長', springAnchorX - 32, circCy);
+                // つり合いの位置ラベル
+                p.fill(255, 255, 255, 110);
+                p.textSize(11);
+                p.textAlign(p.LEFT, p.BOTTOM);
+                p.text('つり合いの位置', springAnchorX + 34, circCy - 2);
 
                 // 円運動の点 → バネの重り を結ぶ水平補助線
                 p.stroke(...COLORS.primaryRGB, 60);
@@ -316,7 +323,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 p.noStroke();
                 p.textSize(12);
                 p.textAlign(p.CENTER, p.TOP);
-                p.text('バネ振動', springAnchorX, circCy + A + 45);
+                p.text('ばね振り子', springAnchorX, circCy + A + 45);
             }
 
             // ========== Step 4: y-tグラフ ==========
@@ -369,7 +376,7 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 // 振幅ラベル
                 p.fill(...COLORS.primaryRGB, alpha * 0.6);
                 p.noStroke();
-                p.textSize(10);
+                p.textSize(11);
                 p.textAlign(p.RIGHT, p.CENTER);
                 p.text('A', graphLeft - 8, graphCy - A);
                 p.text('-A', graphLeft - 8, graphCy + A);
@@ -499,35 +506,13 @@ export default function Mode1Canvas({ step, isPlaying, speedMultiplier, showVect
                 p.fill(255, 255, 255, 40);
                 p.textSize(12);
                 p.textAlign(p.CENTER, p.BOTTOM);
-                p.text('⏸ 一時停止中 — マウスホバーで値を確認', W / 2, H - 10);
-            }
-
-            // onTimeUpdateコールバック
-            if (onTimeUpdate) {
-                onTimeUpdate(state.t, yDisp);
+                p.text('⏸ 一時停止中', W / 2, H - 10);
             }
         };
-    }, [step, isPlaying, speedMultiplier, showVectors, showYtGraph, showVtGraph, showAtGraph, onTimeUpdate]);
-
-    // p5インスタンスの管理（生成と破棄）
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        // インスタンス生成
-        const p5Instance = new p5(sketch, containerRef.current);
-        p5Ref.current = p5Instance;
-
-        // クリーンアップ
-        return () => {
-            p5Instance.remove();
-            p5Ref.current = null;
         };
-    }, [sketch]);
-
-    // リセット用
-    useEffect(() => {
-        // stepが変更されてもtはリセットしない（連続性を保つ）
-    }, [step]);
+        const inst = new p5(sketch, containerRef.current);
+        return () => inst.remove();
+    }, []);
 
     return <div ref={containerRef} className="canvas-container" />;
 }
