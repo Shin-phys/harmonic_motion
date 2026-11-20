@@ -43,7 +43,7 @@ export default function App() {
 
     // ========== グローバル状態 ==========
     const [mode, setMode] = useState(1);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(true); // 開いたらすぐ動く
     const [speedMultiplier, setSpeedMultiplier] = useState(1.0);
     const [resetKey, setResetKey] = useState(0);
 
@@ -108,13 +108,13 @@ export default function App() {
     const handleModeChange = useCallback((newMode) => {
         setMode(newMode);
         setResetKey((k) => k + 1);
-        setIsPlaying(false);
+        setIsPlaying(true);
     }, []);
 
+    // 条件を変えたら最初からやり直す（再生中ならそのまま動かし続ける）
     const updateParams = (updater) => {
         updater();
         setResetKey((k) => k + 1);
-        setIsPlaying(false);
     };
 
     const current = MODES.find((m) => m.id === mode);
