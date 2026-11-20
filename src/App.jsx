@@ -9,14 +9,27 @@ import Mode3Canvas from './components/Mode3Canvas';
 import Mode3Panel from './components/Mode3Panel';
 import Mode4Canvas from './components/Mode4Canvas';
 import Mode4Panel from './components/Mode4Panel';
+import VerticalSpringCanvas from './components/VerticalSpringCanvas';
+import VerticalSpringPanel from './components/VerticalSpringPanel';
+import EnergyCanvas from './components/EnergyCanvas';
+import EnergyPanel from './components/EnergyPanel';
+import PendulumCanvas from './components/PendulumCanvas';
+import PendulumPanel from './components/PendulumPanel';
+import PracticeGraph from './components/PracticeGraph';
+import PracticePanel from './components/PracticePanel';
+import { newPracticeState } from './utils/practice';
 import { useLayoutMode } from './hooks/useLayout';
 
-// モードの定義（aspect は図の縦横比：Mode 1・2 は 800×500、Mode 3・4 は 800×560）
+// モードの定義（並び順＝表示順。id は内部の番号。aspect は図の縦横比）
 const MODES = [
-    { id: 1, label: 'Mode 1', title: '円運動から単振動へ', short: '円運動→単振動', aspect: 800 / 500 },
-    { id: 2, label: 'Mode 2', title: '位相と式の理解', short: '位相と式', aspect: 800 / 500 },
-    { id: 3, label: 'Mode 3', title: '二つの振動の比較', short: '振動の比較', aspect: 800 / 560 },
-    { id: 4, label: 'Mode 4', title: '摩擦のある振動', short: '摩擦あり', aspect: 800 / 560 },
+    { id: 1, title: '円運動から単振動へ', short: '円運動→単振動', aspect: 800 / 500 },
+    { id: 2, title: '位相と式の理解', short: '位相と式', aspect: 800 / 500 },
+    { id: 3, title: '二つの振動の比較', short: '振動の比較', aspect: 800 / 560 },
+    { id: 5, title: '鉛直ばね振り子', short: '鉛直ばね', aspect: 800 / 560 },
+    { id: 6, title: 'エネルギーのグラフ', short: 'エネルギー', aspect: 800 / 560 },
+    { id: 7, title: '単振り子', short: '単振り子', aspect: 800 / 560 },
+    { id: 4, title: '摩擦のある振動（発展）', short: '摩擦（発展）', aspect: 800 / 560 },
+    { id: 8, title: '式を読み取る練習', short: '練習', aspect: 800 / 500, practice: true },
 ];
 
 /**
@@ -59,6 +72,24 @@ export default function App() {
     const [showEnvelope, setShowEnvelope] = useState(false);
     const [showEqPlot, setShowEqPlot] = useState(false);
 
+    // ========== 鉛直ばね振り子 ==========
+    const [vsStep, setVsStep] = useState(0);
+    const [vsParams, setVsParams] = useState({ m: 0.5, k: 20, A: 0.1 });
+    const [vsForces, setVsForces] = useState(false);
+
+    // ========== エネルギーのグラフ ==========
+    const [enParams, setEnParams] = useState({ m: 1.0, k: 20, A: 0.15 });
+    const [enSegments, setEnSegments] = useState(true);
+    const [enKCurve, setEnKCurve] = useState(false);
+
+    // ========== 単振り子 ==========
+    const [pdParams, setPdParams] = useState({ L: 1.0, m: 0.5, theta0: (20 * Math.PI) / 180, g: 9.8 });
+    const [pdApprox, setPdApprox] = useState(true);
+    const [pdForces, setPdForces] = useState(false);
+
+    // ========== 練習 ==========
+    const [practice, setPractice] = useState(() => newPracticeState('basic'));
+
     // ========== ハンドラ ==========
     const handleReset = useCallback(() => {
         setResetKey((k) => k + 1);
@@ -87,7 +118,7 @@ export default function App() {
     };
 
     const current = MODES.find((m) => m.id === mode);
-    const controls = (variant) => (
+    const controls = (variant) => (current.practice ? null : (
         <GlobalControls
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
@@ -96,7 +127,7 @@ export default function App() {
             onSpeedChange={setSpeedMultiplier}
             variant={variant}
         />
-    );
+    ));
 
     // ========== 図 ==========
     const canvas = (
@@ -134,6 +165,43 @@ export default function App() {
                     spring2={spring2}
                     phaseDiffEnabled={phaseDiffEnabled}
                     phaseDiff={phaseDiff}
+                />
+            )}
+            {mode === 5 && (
+                <VerticalSpringCanvas
+                    key={`m5-${resetKey}`}
+                    isPlaying={isPlaying}
+                    speedMultiplier={speedMultiplier}
+                    step={vsStep}
+                    showForces={vsForces}
+                    {...vsParams}
+                />
+            )}
+            {mode === 6 && (
+                <EnergyCanvas
+                    key={`m6-${resetKey}`}
+                    isPlaying={isPlaying}
+                    speedMultiplier={speedMultiplier}
+                    showSegments={enSegments}
+                    showKCurve={enKCurve}
+                    {...enParams}
+                />
+            )}
+            {mode === 7 && (
+                <PendulumCanvas
+                    key={`m7-${resetKey}`}
+                    isPlaying={isPlaying}
+                    speedMultiplier={speedMultiplier}
+                    showApprox={pdApprox}
+                    showForces={pdForces}
+                    {...pdParams}
+                />
+            )}
+            {mode === 8 && (
+                <PracticeGraph
+                    q={practice.q}
+                    overlay={practice.checked && practice.result?.A > 0 && practice.result?.T > 0 && practice.phi !== null
+                        ? { A: practice.result.A, T: practice.result.T, phi: practice.phi } : null}
                 />
             )}
             {mode === 4 && (
@@ -191,6 +259,37 @@ export default function App() {
                     onPhaseDiffChange={(val) => updateParams(() => setPhaseDiff(val))}
                 />
             )}
+            {mode === 5 && (
+                <VerticalSpringPanel
+                    step={vsStep}
+                    onStepChange={setVsStep}
+                    params={vsParams}
+                    onParamsChange={(v) => updateParams(() => setVsParams(v))}
+                    showForces={vsForces}
+                    onShowForcesChange={setVsForces}
+                />
+            )}
+            {mode === 6 && (
+                <EnergyPanel
+                    params={enParams}
+                    onParamsChange={(v) => updateParams(() => setEnParams(v))}
+                    showSegments={enSegments}
+                    onShowSegmentsChange={setEnSegments}
+                    showKCurve={enKCurve}
+                    onShowKCurveChange={setEnKCurve}
+                />
+            )}
+            {mode === 7 && (
+                <PendulumPanel
+                    params={pdParams}
+                    onParamsChange={(v) => updateParams(() => setPdParams(v))}
+                    showApprox={pdApprox}
+                    onShowApproxChange={setPdApprox}
+                    showForces={pdForces}
+                    onShowForcesChange={setPdForces}
+                />
+            )}
+            {mode === 8 && <PracticePanel state={practice} onChange={setPractice} />}
             {mode === 4 && (
                 <Mode4Panel
                     mu={mu}
@@ -209,18 +308,24 @@ export default function App() {
 
     const tabs = (
         <nav className="mode-tabs" aria-label="モード切り替え">
-            <div className={`flex w-full ${layout === 'wide' ? '' : 'overflow-x-auto'}`}>
-                {MODES.map((m) => (
+            <div className="flex w-full overflow-x-auto">
+                {MODES.map((m, i) => (
                     <button
                         key={m.id}
                         id={`mode-tab-${m.id}`}
                         type="button"
+                        title={m.title}
                         aria-current={mode === m.id ? 'page' : undefined}
                         className={`mode-tab whitespace-nowrap ${mode === m.id ? 'active' : ''}`}
                         onClick={() => handleModeChange(m.id)}
                     >
-                        <span className="mode-label">{layout === 'wide' ? m.label : m.id}</span>
-                        {layout === 'wide' ? m.title : m.short}
+                        <span className="mode-label">{i + 1}</span>
+                        {layout === 'wide' ? (
+                            <>
+                                <span className="hidden min-[1600px]:inline">{m.title}</span>
+                                <span className="min-[1600px]:hidden">{m.short}</span>
+                            </>
+                        ) : m.short}
                     </button>
                 ))}
             </div>
@@ -284,9 +389,11 @@ export default function App() {
             <main className="relative flex-1 min-h-0 overflow-y-auto p-2">
                 <div className="control-panel">{panel}</div>
             </main>
-            <div className="shrink-0 border-t border-slate-700/60 bg-slate-900/95 px-3 pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
-                {controls('bar')}
-            </div>
+            {!current.practice && (
+                <div className="shrink-0 border-t border-slate-700/60 bg-slate-900/95 px-3 pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+                    {controls('bar')}
+                </div>
+            )}
         </div>
     );
 }
